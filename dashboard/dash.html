@@ -27,8 +27,12 @@
               class="w-12 h-12 rounded-full"
             />
             <div>
-              <p class="font-semibold text-base">kashish sonpari</p>
-              <p class="text-gray-500 text-xs">Dashboard User</p>
+              <p id="sidebarName" class="font-semibold text-base">
+                kashish sonpari
+              </p>
+              <p id="sidebarRole" class="text-gray-500 text-xs">
+                Dashboard User
+              </p>
             </div>
           </div>
           <!-- Storage Info -->
@@ -465,7 +469,7 @@
           <div id="filesList" class="space-y-4">
             <!-- Files will load dynamically from backend -->
             <div
-              class="relative w-[1130px] bg-gradient-to-br from-gray-100 to-white p-6 rounded-2xl shadow flex items-start justify-between overflow-hidden"
+              class="relative w-[1050px] bg-gradient-to-br from-gray-100 to-white p-6 rounded-2xl shadow flex items-start justify-between overflow-hidden"
             >
               <!-- Decorative Quarter Circle -->
               <div
@@ -499,6 +503,178 @@
                       <i class="fa-regular fa-star"></i>
                       <span>2 permanent files</span>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800"
+          >
+            <input
+              type="text"
+              placeholder="Search files..."
+              class="w-1/3 px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 focus:outline-none focus:ring focus:ring-indigo-500"
+            />
+
+            <div class="flex items-center gap-3">
+              <button
+                class="px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              >
+                All Files
+              </button>
+              <button
+                class="px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-1"
+              >
+                <span>⏰</span> Temporary
+              </button>
+              <button
+                class="px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-1"
+              >
+                ⭐ Permanent
+              </button>
+              <button
+                class="px-4 py-2 rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-medium flex items-center gap-2"
+              >
+                <span>🔗</span> Upload & Share
+              </button>
+            </div>
+          </div>
+
+          <!-- File List -->
+          <div class="p-6 space-y-4">
+            <!-- File 1 -->
+            <div
+              class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900"
+            >
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="font-medium">My Resume.pdf</h3>
+                  <p class="text-sm text-neutral-500">
+                    245 KB • Expired remaining • 3 downloads
+                  </p>
+                  <div class="mt-2">
+                    <input
+                      type="text"
+                      readonly
+                      value="https://dashboard.app/share/abc123"
+                      class="w-[120%] px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm"
+                    />
+                  </div>
+                  <p class="mt-2 text-sm text-neutral-500">Shared with:</p>
+                  <div class="flex gap-3 mt-1">
+                    <span
+                      class="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-sm"
+                      >J</span
+                    >
+                    <span
+                      class="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-sm"
+                      >S</span
+                    >
+                  </div>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                  <span
+                    class="px-2 py-1 text-xs rounded-lg bg-neutral-200 dark:bg-neutral-700"
+                    >Private</span
+                  >
+                  <div class="flex gap-2">
+                    <button
+                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    >
+                      <i class="fa-regular fa-download"></i>
+                    </button>
+                    <button
+                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- File 2 -->
+            <div
+              class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900"
+            >
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="font-medium flex items-center gap-2">
+                    Project Proposal.docx
+                    <span
+                      class="px-2 py-1 text-xs rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
+                      >Permanent</span
+                    >
+                  </h3>
+                  <p class="text-sm text-neutral-500">
+                    1.2 MB • Permanent • 12 downloads
+                  </p>
+                  <div class="mt-2">
+                    <input
+                      type="text"
+                      readonly
+                      value="https://dashboard.app/share/def456"
+                      class="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm"
+                    />
+                  </div>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                  <span
+                    class="px-2 py-1 text-xs rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
+                    >Public</span
+                  >
+                  <div class="flex gap-2">
+                    <button
+                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    >
+                      <i class="fa-regular fa-download"></i>
+                    </button>
+                    <button
+                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- File 3 -->
+            <div
+              class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900"
+            >
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="font-medium">Portfolio Images.zip</h3>
+                  <p class="text-sm text-neutral-500">
+                    15.8 MB • Expired remaining • 1 downloads
+                  </p>
+                  <div class="mt-2">
+                    <input
+                      type="text"
+                      readonly
+                      value="https://dashboard.app/share/ghi789"
+                      class="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm"
+                    />
+                  </div>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                  <span
+                    class="px-2 py-1 text-xs rounded-lg bg-neutral-200 dark:bg-neutral-700"
+                    >Private</span
+                  >
+                  <div class="flex gap-2">
+                    <button
+                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    >
+                      <i class="fa-regular fa-download"></i>
+                    </button>
+                    <button
+                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    >
+                      🗑️
+                    </button>
                   </div>
                 </div>
               </div>
