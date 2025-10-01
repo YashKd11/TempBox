@@ -246,3 +246,33 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+// ---------------- PROFILE FORM SUBMISSION ----------------
+document.getElementById("profileForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const sanitize = (str) =>
+    str.replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
+
+  const name = sanitize(document.getElementById("profileName").value);
+  const email = document.getElementById("profileEmail").value.trim();
+  const phone = sanitize(document.getElementById("profilePhone").value);
+  const location = sanitize(document.getElementById("profileLocation").value);
+  const bio = sanitize(document.getElementById("profileBio").value);
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    alert("Invalid email format.");
+    return;
+  }
+
+  // ✅ Update main profile section
+  document.getElementById("userName").textContent = name;
+  document.getElementById("userEmail").textContent = email;
+  document.getElementById("userPhone").textContent = phone;
+  document.getElementById("userLocation").textContent = location;
+  document.getElementById("userBio").textContent = bio;
+
+  // ✅ Update sidebar name
+  document.getElementById("sidebarName").textContent = name;
+
+  alert("✅ Profile saved securely!");
+});
