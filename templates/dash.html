@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="static/dashboard.js"></script>
+    <script
+      src="https://kit.fontawesome.com/2cb49ad06d.js"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body
+    class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-sans"
+  >
+    <div class="flex min-h-screen">
+      <!-- Sidebar -->
+      <aside
+        class="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col"
+      >
+        <div class="bg-gray-200 dark:bg-gray-800 p-3 m-5 rounded-md shadow-lg">
+          <div class="flex items-center space-x-3">
+            <img
+              src="https://randomuser.me/api/portraits/men/1.jpg"
+              alt="User Avatar"
+              class="w-12 h-12 rounded-full"
+            />
+            <div>
+              <p id="sidebarName" class="font-semibold text-base">
+                kashish sonpari
+              </p>
+              <p id="sidebarRole" class="text-gray-500 text-xs">
+                Dashboard User
+              </p>
+            </div>
+          </div>
+          <!-- Storage Info -->
+          <div class="mt-4">
+            <p class="text-gray-500 text-xs">Storage</p>
+            <div class="flex items-center">
+              <p class="font-semibold text-sm">2.1 GB / 10 GB</p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="bg-gray-300 rounded-full mt-1 h-2">
+              <div class="bg-black h-2 rounded" style="width: 21%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-6 border-b border-gray-200 mx-4 dark:border-gray-700">
+          <h1 class="text-xl">
+            <span class="p-2 text-white rounded-full bg-black dark:bg-gray-700">
+              &nbsp;D
+            </span>
+            &nbsp;Dashboard
+          </h1>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+          <button
+            data-section="templates"
+            class="nav-link w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+          >
+            <i class="fa-regular fa-file"></i> Templates
+          </button>
+          <button
+            data-section="converter"
+            class="nav-link w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+          >
+            <i class="fa-regular fa-repeat"></i> Converter
+          </button>
+          <button
+            data-section="files"
+            class="nav-link w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+          >
+            <i class="fa-regular fa-share-nodes"></i> My Files
+          </button>
+          <button
+            data-section="profile"
+            class="nav-link w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+          >
+            <i class="fa-regular fa-user"></i> Profile
+          </button>
+          <button
+            data-section="settings"
+            class="nav-link w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+          >
+            <i class="fa-regular fa-gear"></i>Settings
+          </button>
+        </nav>
+        <div class="p-4 border-t border-gray-200 mx-4 dark:border-gray-700">
+          <button
+            id="logoutBtn"
+            class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg"
+          >
+            Logout
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 p-6 overflow-y-auto">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-6">
+          <h2 id="sectionTitle" class="text-2xl font-semibold">Dashboard</h2>
+          <button
+            id="darkModeToggle"
+            class="p-2 rounded-full bg-gray-200 dark:bg-gray-700"
+          >
+            🌙
+          </button>
+        </header>
+
+        <!-- Sections -->
+        <section id="templatesSection" class="hidden">
+          <div
+            class="relative w-[1130px] bg-gradient-to-br from-gray-100 to-white p-6 rounded-2xl shadow flex items-start justify-between overflow-hidden"
+          >
+            <!-- Decorative Quarter Circle -->
+            <div
+              class="absolute top-0 right-0 w-32 h-32 bg-gray-200 opacity-30 rounded-bl-full pointer-events-none"
+            ></div>
+
+            <!-- Left Icon and Text -->
+            <div class="flex items-start space-x-4 z-10">
+              <!-- Icon Box -->
+              <div class="bg-gray-200 rounded-xl p-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-6 h-6 text-gray-700"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12h6m2 4H7m10-8H7m13-2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2h10l4 4z"
+                  />
+                </svg>
+              </div>
+
+              <!-- Title and Description -->
+              <div>
+                <h2 class="font-semibold text-lg text-black">Templates</h2>
+                <p class="text-gray-500 mt-1">
+                  Choose from our collection of professional templates
+                </p>
+
+                <!-- Stats Row -->
+                <div
+                  class="flex items-center space-x-6 text-sm text-gray-600 mt-4"
+                >
+                  <div class="flex items-center space-x-1">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="w-4 h-4 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M3 10h11M9 21V3m10 4l-4 4 4 4"
+                      />
+                    </svg>
+                    <span>50+ templates</span>
+                  </div>
+
+                  <div class="flex items-center space-x-1">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="w-4 h-4 text-yellow-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.18c.969 0 1.371 1.24.588 1.81l-3.39 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.538 1.118l-3.39-2.46a1 1 0 00-1.176 0l-3.39 2.46c-.783.57-1.838-.197-1.538-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.393c-.783-.57-.38-1.81.588-1.81h4.18a1 1 0 00.95-.69l1.286-3.966z"
+                      />
+                    </svg>
+                    <span>4.7 average rating</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br />
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="p-6 bg-white dark:bg-gray-800 rounded-xl shadow">
+              Templates used: <strong id="templatesUsed">0</strong>
+            </div>
+            <div class="p-6 bg-white dark:bg-gray-800 rounded-xl shadow">
+              Files converted: <strong id="filesConverted">0</strong>
+            </div>
+            <div class="p-6 bg-white dark:bg-gray-800 rounded-xl shadow">
+              Files shared: <strong id="filesShared">0</strong>
+            </div>
+            <div class="p-6 bg-white dark:bg-gray-800 rounded-xl shadow">
+              Total downloads: <strong id="downloads">--</strong>
+            </div>
+          </div>
+          <br />
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          >
+            <!-- Template Card -->
+            <div
+              class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-md transition"
+            >
+              <h3 class="font-medium text-lg text-gray-900 dark:text-gray-100">
+                Resume
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Professional CV for jobs
+              </p>
+              <button
+                class="mt-4 w-full py-2 text-sm rounded-lg bg-gray-900 text-white dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 transition"
+              >
+                Use Template
+              </button>
+            </div>
+
+            <div
+              class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-md transition"
+            >
+              <h3 class="font-medium text-lg text-gray-900 dark:text-gray-100">
+                Cover Letter
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Personalized job cover letters
+              </p>
+              <button
+                class="mt-4 w-full py-2 text-sm rounded-lg bg-gray-900 text-white dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 transition"
+              >
+                Use Template
+              </button>
+            </div>
+
+            <div
+              class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-md transition"
+            >
+              <h3 class="font-medium text-lg text-gray-900 dark:text-gray-100">
+                Business Proposal
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Pitch your ideas professionally
+              </p>
+              <button
+                class="mt-4 w-full py-2 text-sm rounded-lg bg-gray-900 text-white dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 transition"
+              >
+                Use Template
+              </button>
+            </div>
+
+            <div
+              class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-md transition"
+            >
+              <h3 class="font-medium text-lg text-gray-900 dark:text-gray-100">
+                Invoice
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Bill your clients easily
+              </p>
+              <button
+                class="mt-4 w-full py-2 text-sm rounded-lg bg-gray-900 text-white dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 transition"
+              >
+                Use Template
+              </button>
+            </div>
+
+            <div
+              class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-md transition"
+            >
+              <h3 class="font-medium text-lg text-gray-900 dark:text-gray-100">
+                Report
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Summarize data & research
+              </p>
+              <button
+                class="mt-4 w-full py-2 text-sm rounded-lg bg-gray-900 text-white dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 transition"
+              >
+                Use Template
+              </button>
+            </div>
+
+            <div
+              class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-md transition"
+            >
+              <h3 class="font-medium text-lg text-gray-900 dark:text-gray-100">
+                Newsletter
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Engage your subscribers
+              </p>
+              <button
+                class="mt-4 w-full py-2 text-sm rounded-lg bg-gray-900 text-white dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 transition"
+              >
+                Use Template
+              </button>
+            </div>
+
+            <div
+              class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-md transition"
+            >
+              <h3 class="font-medium text-lg text-gray-900 dark:text-gray-100">
+                Presentation
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Slides for meetings & projects
+              </p>
+              <button
+                class="mt-4 w-full py-2 text-sm rounded-lg bg-gray-900 text-white dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 transition"
+              >
+                Use Template
+              </button>
+            </div>
+
+            <div
+              class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-md transition"
+            >
+              <h3 class="font-medium text-lg text-gray-900 dark:text-gray-100">
+                Portfolio
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Showcase your work elegantly
+              </p>
+              <button
+                class="mt-4 w-full py-2 text-sm rounded-lg bg-gray-900 text-white dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 transition"
+              >
+                Use Template
+              </button>
+            </div>
+
+            <div
+              class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-md transition"
+            >
+              <h3 class="font-medium text-lg text-gray-900 dark:text-gray-100">
+                Agreement
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Contracts & legal templates
+              </p>
+              <button
+                class="mt-4 w-full py-2 text-sm rounded-lg bg-gray-900 text-white dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 transition"
+              >
+                Use Template
+              </button>
+            </div>
+
+            <div
+              class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-md transition"
+            >
+              <h3 class="font-medium text-lg text-gray-900 dark:text-gray-100">
+                Letterhead
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Brand your documents easily
+              </p>
+              <button
+                class="mt-4 w-full py-2 text-sm rounded-lg bg-gray-900 text-white dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 transition"
+              >
+                Use Template
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section id="converterSection" class="hidden">
+          <div
+            class="relative bg-gradient-to-br from-blue-50 to-white dark:from-gray-800 dark:to-gray-900 p-8 rounded-2xl shadow-lg max-w-lg mx-auto text-center"
+          >
+            <!-- Decorative Circle -->
+            <div
+              class="absolute top-0 right-0 w-32 h-32 bg-blue-100 dark:bg-gray-700 rounded-bl-full opacity-20 pointer-events-none"
+            ></div>
+
+            <h3
+              class="text-2xl font-semibold mb-2 text-gray-800 dark:text-gray-100"
+            >
+              File Converter
+            </h3>
+            <p class="text-gray-500 dark:text-gray-400 mb-4">
+              Upload a file, pick a format and press Convert
+            </p>
+
+            <!-- Upload Box -->
+            <label
+              for="fileInput"
+              class="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 bg-gray-50 dark:bg-gray-800 hover:border-blue-400 transition"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-10 h-10 text-blue-500 mb-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 8l-3-3m3 3l3-3"
+                />
+              </svg>
+              <p class="text-sm text-gray-600 dark:text-gray-300">
+                Click to upload or drag & drop
+              </p>
+              <input type="file" id="fileInput" class="hidden" />
+            </label>
+
+            <!-- File preview + format select -->
+            <div class="flex items-center gap-3 mt-4">
+              <div
+                id="filePreview"
+                class="flex-1 text-sm text-gray-600 dark:text-gray-300"
+              ></div>
+
+              <select
+                id="targetFormat"
+                class="border rounded px-2 py-1 bg-white dark:bg-gray-800 text-sm"
+              >
+                <option value="same">Keep same</option>
+                <option value="png">PNG (image)</option>
+                <option value="jpg">JPG (image)</option>
+                <!-- add other server-only conversion options -->
+                <option value="pdf">PDF (server)</option>
+                <option value="docx">DOCX (server)</option>
+              </select>
+            </div>
+
+            <!-- Convert Button -->
+            <button
+              id="convertBtn"
+              class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow transition"
+            >
+              Convert File
+            </button>
+
+            <!-- Progress -->
+            <div id="convertProgress" class="mt-4 hidden">
+              <div class="w-full bg-gray-200 h-2 rounded overflow-hidden">
+                <div id="convertProgressBar" class="h-2 bg-blue-500 w-0"></div>
+              </div>
+              <div
+                id="convertStatus"
+                class="text-xs text-gray-600 mt-2 dark:text-gray-300"
+              >
+                Waiting...
+              </div>
+            </div>
+
+            <!-- Result -->
+            <div
+              id="convertResult"
+              class="mt-4 text-sm text-gray-600 dark:text-gray-300"
+            ></div>
+            <div class="mt-3 text-xs text-gray-400">
+              Supported client-side: JPG, PNG. Other formats require a server.
+            </div>
+          </div>
+        </section>
+
+        <section id="filesSection" class="hidden">
+          <div id="filesList" class="space-y-4">
+            <!-- Files will load dynamically from backend -->
+            <div
+              class="relative w-[1050px] bg-gradient-to-br from-gray-100 to-white p-6 rounded-2xl shadow flex items-start justify-between overflow-hidden"
+            >
+              <!-- Decorative Quarter Circle -->
+              <div
+                class="absolute top-0 right-0 w-32 h-32 bg-gray-200 opacity-30 rounded-bl-full pointer-events-none"
+              ></div>
+
+              <!-- Left Icon and Text -->
+              <div class="flex items-start space-x-4 z-10">
+                <!-- Icon Box -->
+                <div class="bg-gray-200 rounded-xl p-2">
+                  <i class="fa-regular fa-hard-drive"></i>
+                </div>
+
+                <!-- Title and Description -->
+                <div>
+                  <h2 class="font-semibold text-lg text-black">My Files</h2>
+                  <p class="text-gray-500 mt-1">
+                    Manage your shared files and storage options
+                  </p>
+
+                  <!-- Stats Row -->
+                  <div
+                    class="flex items-center space-x-6 text-sm text-gray-600 mt-4"
+                  >
+                    <div class="flex items-center space-x-1">
+                      <i class="fa-solid fa-chart-simple"></i>
+                      <span>4 files stored</span>
+                    </div>
+
+                    <div class="flex items-center space-x-1">
+                      <i class="fa-regular fa-star"></i>
+                      <span>2 permanent files</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800"
+          >
+            <input
+              type="text"
+              placeholder="Search files..."
+              class="w-1/3 px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 focus:outline-none focus:ring focus:ring-indigo-500"
+            />
+
+            <div class="flex items-center gap-3">
+              <button
+                class="px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              >
+                All Files
+              </button>
+              <button
+                class="px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-1"
+              >
+                <span>⏰</span> Temporary
+              </button>
+              <button
+                class="px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-1"
+              >
+                ⭐ Permanent
+              </button>
+              <button
+                class="px-4 py-2 rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-medium flex items-center gap-2"
+              >
+                <span>🔗</span> Upload & Share
+              </button>
+            </div>
+          </div>
+
+          <!-- File List -->
+          <div class="p-6 space-y-4">
+            <!-- File 1 -->
+            <div
+              class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900"
+            >
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="font-medium">My Resume.pdf</h3>
+                  <p class="text-sm text-neutral-500">
+                    245 KB • Expired remaining • 3 downloads
+                  </p>
+                  <div class="mt-2">
+                    <input
+                      type="text"
+                      readonly
+                      value="https://dashboard.app/share/abc123"
+                      class="w-[120%] px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm"
+                    />
+                  </div>
+                  <p class="mt-2 text-sm text-neutral-500">Shared with:</p>
+                  <div class="flex gap-3 mt-1">
+                    <span
+                      class="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-sm"
+                      >J</span
+                    >
+                    <span
+                      class="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-sm"
+                      >S</span
+                    >
+                  </div>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                  <span
+                    class="px-2 py-1 text-xs rounded-lg bg-neutral-200 dark:bg-neutral-700"
+                    >Private</span
+                  >
+                  <div class="flex gap-2">
+                    <button
+                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    >
+                      <i class="fa-regular fa-download"></i>
+                    </button>
+                    <button
+                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- File 2 -->
+            <div
+              class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900"
+            >
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="font-medium flex items-center gap-2">
+                    Project Proposal.docx
+                    <span
+                      class="px-2 py-1 text-xs rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
+                      >Permanent</span
+                    >
+                  </h3>
+                  <p class="text-sm text-neutral-500">
+                    1.2 MB • Permanent • 12 downloads
+                  </p>
+                  <div class="mt-2">
+                    <input
+                      type="text"
+                      readonly
+                      value="https://dashboard.app/share/def456"
+                      class="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm"
+                    />
+                  </div>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                  <span
+                    class="px-2 py-1 text-xs rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
+                    >Public</span
+                  >
+                  <div class="flex gap-2">
+                    <button
+                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    >
+                      <i class="fa-regular fa-download"></i>
+                    </button>
+                    <button
+                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- File 3 -->
+            <div
+              class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900"
+            >
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="font-medium">Portfolio Images.zip</h3>
+                  <p class="text-sm text-neutral-500">
+                    15.8 MB • Expired remaining • 1 downloads
+                  </p>
+                  <div class="mt-2">
+                    <input
+                      type="text"
+                      readonly
+                      value="https://dashboard.app/share/ghi789"
+                      class="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm"
+                    />
+                  </div>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                  <span
+                    class="px-2 py-1 text-xs rounded-lg bg-neutral-200 dark:bg-neutral-700"
+                    >Private</span
+                  >
+                  <div class="flex gap-2">
+                    <button
+                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    >
+                      <i class="fa-regular fa-download"></i>
+                    </button>
+                    <button
+                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="profileSection" class="hidden">
+          <div
+            class="p-8 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
+          >
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6">
+              <h3
+                class="text-2xl font-semibold text-gray-800 dark:text-gray-100"
+              >
+                Profile
+              </h3>
+              <button
+                id="editProfileBtn"
+                class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
+              >
+                ✏️ Edit
+              </button>
+            </div>
+
+            <!-- Profile Top -->
+            <div class="flex items-center gap-6 mb-8">
+              <img
+                id="userAvatar"
+                src="https://ui-avatars.com/api/?name=User&background=0D1117&color=fff"
+                alt="Profile"
+                class="w-20 h-20 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm"
+              />
+              <div>
+                <h4
+                  id="userName"
+                  class="text-xl font-medium text-gray-900 dark:text-gray-100"
+                >
+                  Guest User
+                </h4>
+                <p
+                  id="userEmail"
+                  class="text-sm text-gray-500 dark:text-gray-400"
+                >
+                  Not logged in
+                </p>
+              </div>
+            </div>
+
+            <!-- Info Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div
+                class="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+              >
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Local Time
+                </p>
+                <p
+                  id="userTime"
+                  class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  --:--
+                </p>
+              </div>
+              <div
+                class="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+              >
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  IP Address
+                </p>
+                <p
+                  id="userIP"
+                  class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  Detecting...
+                </p>
+              </div>
+              <div
+                class="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+              >
+                <p class="text-sm text-gray-500 dark:text-gray-400">Location</p>
+                <p
+                  id="userLocation"
+                  class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  Detecting...
+                </p>
+              </div>
+            </div>
+
+            <!-- Bio -->
+            <div
+              class="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+            >
+              <p class="text-sm text-gray-500 dark:text-gray-400">Bio</p>
+              <p id="userBio" class="mt-1 text-gray-900 dark:text-gray-100">
+                No bio added yet.
+              </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-8 flex justify-end gap-3">
+              <button
+                id="logoutBtn"
+                class="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section id="settingsSection" class="hidden">
+          <div class="mb-6">
+            <h2 class="text-2xl font-semibold mb-2">Settings</h2>
+            <p class="text-gray-500 dark:text-gray-400">
+              Customize your experience
+            </p>
+          </div>
+
+          <div class="space-y-6">
+            <!-- Dark Mode Toggle -->
+            <div
+              class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl shadow"
+            >
+              <div>
+                <h3 class="font-medium text-gray-900 dark:text-gray-100">
+                  Dark Mode
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Switch between light & dark theme
+                </p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="darkModeSwitch"
+                  class="sr-only peer"
+                />
+                <div
+                  class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-400 dark:peer-focus:ring-blue-600 rounded-full peer dark:bg-gray-700 peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white"
+                ></div>
+              </label>
+            </div>
+
+            <!-- Change Username -->
+            <div class="p-4 bg-white dark:bg-gray-800 rounded-xl shadow">
+              <h3 class="font-medium text-gray-900 dark:text-gray-100">
+                Change Username
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                Update your display name
+              </p>
+              <div class="mt-3 flex gap-3">
+                <input
+                  id="newUsername"
+                  type="text"
+                  placeholder="Enter new username"
+                  class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200"
+                />
+                <button
+                  id="saveUsername"
+                  class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+
+            <!-- Notifications -->
+            <div
+              class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl shadow"
+            >
+              <div>
+                <h3 class="font-medium text-gray-900 dark:text-gray-100">
+                  Notifications
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Enable or disable alerts
+                </p>
+              </div>
+              <input
+                id="notifToggle"
+                type="checkbox"
+                class="w-5 h-5 accent-blue-600 dark:accent-blue-500"
+              />
+            </div>
+
+            <!-- Language -->
+            <div class="p-4 bg-white dark:bg-gray-800 rounded-xl shadow">
+              <h3 class="font-medium text-gray-900 dark:text-gray-100">
+                Language
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                Choose your preferred language
+              </p>
+              <select
+                id="languageSelect"
+                class="mt-3 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200"
+              >
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="fr">French</option>
+                <option value="es">Spanish</option>
+              </select>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
