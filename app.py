@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.secret_key = 'a-very-secret-and-static-key-for-development'
 
 # MongoDB Configuration
-MONGO_URI = "mongodb+srv://panda:sonu@clustertest.qwyt70x.mongodb.net/" # Replace with your MongoDB connection string if different
+MONGO_URI = "mongodb+srv://:@clustertest.qwyt70x.mongodb.net/" # Replace with your MongoDB connection string if different
 client = MongoClient(MONGO_URI)
 db = client.tempbox_db # Your database name
 users_collection = db.users # Collection for users
