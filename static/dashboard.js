@@ -17,15 +17,25 @@ document.addEventListener("DOMContentLoaded", () => {
     files: document.getElementById("filesSection"),
     profile: document.getElementById("profileSection"),
     settings: document.getElementById("settingsSection"),
+    activity: document.getElementById("activitySection"),
   };
+
+  // Hide all sections except the default one (activity) on load
+  Object.keys(sections).forEach(key => sections[key].classList.toggle("hidden", key !== 'activity'));
+
   document.querySelectorAll(".nav-link").forEach((btn) => {
     btn.addEventListener("click", () => {
       const target = btn.dataset.section;
       document.getElementById("sectionTitle").textContent =
-        target.charAt(0).toUpperCase() + target.slice(1);
+        target === 'activity' ? 'Activity Log' : target.charAt(0).toUpperCase() + target.slice(1);
       Object.keys(sections).forEach((key) => {
         sections[key].classList.toggle("hidden", key !== target);
       });
+
+      // If the activity log is the target, load its content
+      if (target === 'activity') {
+        loadActivityLog();
+      }
     });
   });
 
@@ -39,50 +49,72 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }, 1000);
 
+  // Fetch IP and location on dashboard load, and update backend
   fetch("https://ipapi.co/json/")
     .then((res) => res.json())
     .then((data) => {
-      document.getElementById("userIP").textContent = data.ip;
+      document.getElementById("userIP").textContent = data.ip || "Unavailable";
       document.getElementById(
         "userLocation"
-      ).textContent = `${data.city}, ${data.country_name}`;
+      ).textContent = `${data.city || "Unavailable"}, ${
+        data.country_name || "Unavailable"
+      }`;
 
-      // Only set username if it's empty (first load), not if user has updated it
-      const userNameEl = document.getElementById("userName");
-      if (
-        !userNameEl.textContent ||
-        userNameEl.textContent === "Anonymous User"
-      ) {
-        userNameEl.textContent = data.org || "Anonymous User";
-      }
-
-      const userEmailEl = document.getElementById("userEmail");
-      if (
-        !userEmailEl.textContent ||
-        userEmailEl.textContent === "guest@domain.com"
-      ) {
-        userEmailEl.textContent = data.ip
-          ? `user@${data.country.toLowerCase()}.net`
-          : "guest@domain.com";
-      }
+      // Send IP/location data to backend to update user profile
+      fetch("/api/profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ip: data.ip,
+          city: data.city,
+          country_name: data.country_name,
+          org: data.org,
+        }),
+      }).catch((err) => console.error("Failed to update IP/location:", err));
     })
     .catch(() => {
       document.getElementById("userIP").textContent = "Unavailable";
       document.getElementById("userLocation").textContent = "Unavailable";
     });
 
-  document.getElementById("editProfileBtn").addEventListener("click", () => {
-    const newBio = prompt("Update your bio:");
-    if (newBio) document.getElementById("userBio").textContent = newBio;
+  const profileForm = document.getElementById("profileForm");
+  const toggleEditProfileFormBtn = document.getElementById(
+    "toggleEditProfileFormBtn"
+  );
+  const cancelEditProfileBtn = document.getElementById("cancelEditProfileBtn");
+  const profileDisplayElements = {
+    userName: document.getElementById("userName"),
+    userEmail: document.getElementById("userEmail"),
+    userBio: document.getElementById("userBio"),
+    sidebarName: document.getElementById("sidebarName"),
+    userPhone: document.getElementById("userPhone"),
+    userLocation: document.getElementById("userLocation"),
+  };
+
+  // Toggle profile edit form visibility
+  toggleEditProfileFormBtn?.addEventListener("click", () => {
+    profileForm?.classList.toggle("hidden");
+    toggleEditProfileFormBtn.classList.toggle("hidden"); // Hide edit button when form is open
+  });
+
+  cancelEditProfileBtn?.addEventListener("click", () => {
+    profileForm?.classList.add("hidden");
+    toggleEditProfileFormBtn.classList.remove("hidden"); // Show edit button when form is closed
   });
 
   document.getElementById("logoutBtn").addEventListener("click", () => {
-    fetch("/api/logout", { method: "POST", credentials: "include" }).finally(
-      () => {
-        alert("✅ You have been logged out.");
-        window.location.href = "login.html";
-      }
-    );
+    fetch("/api/logout", { method: "POST", credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        alert(`✅ ${data.message}`);
+        window.location.href = "/login"; // Redirect to login page
+      })
+      .catch((err) => {
+        console.error("Logout error:", err);
+        alert("An error occurred during logout.");
+      });
   });
 
   // ---------------- FILE CONVERTER ----------------
@@ -139,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let chosenTarget = target;
     if (target === "same") {
       if (file.type.startsWith("image/"))
-        chosenTarget = file.type.includes("png") ? "png" : "jpg";
+        chosenTarget = file.type.includes("png") ? "png" : "jpg"; // Client-side image conversion
       else chosenTarget = "server";
     }
 
@@ -147,16 +179,13 @@ document.addEventListener("DOMContentLoaded", () => {
     showProgress(5, "Preparing...");
 
     try {
-      if (
-        file.type.startsWith("image/") &&
-        (chosenTarget === "png" || chosenTarget === "jpg")
-      ) {
+      if (file.type.startsWith("image/") && (chosenTarget === "png" || chosenTarget === "jpg")) {
         await convertImageClientSide(file, chosenTarget);
       } else {
-        await uploadToServer(file, chosenTarget);
+        await uploadToServer(file, chosenTarget === "same" ? "server" : chosenTarget);
       }
     } catch (err) {
-      resultBox.innerHTML = `<div class="text-red-500">Error: ${
+      resultBox.innerHTML = `<div class="text-red-500">Conversion Error: ${
         err.message || err
       }</div>`;
     } finally {
@@ -218,22 +247,33 @@ document.addEventListener("DOMContentLoaded", () => {
       };
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          const blob = new Blob([xhr.response], {
-            type: xhr.getResponseHeader("Content-Type"),
-          });
-          const url = URL.createObjectURL(blob);
-          resultBox.innerHTML = `<a href="${url}" download="converted-file" class="inline-block px-4 py-2 bg-green-500 text-white rounded">Download</a>`;
-          showProgress(100, "Converted");
-          resolve();
+          try {
+            const responseData = JSON.parse(xhr.responseText); // Expect JSON response
+            if (responseData.download_url) {
+              resultBox.innerHTML = `<a href="${responseData.download_url}" download="converted-file" class="inline-block px-4 py-2 bg-green-500 text-white rounded">Download</a>`;
+              showProgress(100, "Converted");
+              resolve();
+            } else {
+              reject(new Error("Server response missing download URL."));
+            }
+          } catch (e) {
+            reject(new Error("Failed to parse server response."));
+          }
         } else {
-          reject(new Error(`Server returned ${xhr.status}`));
+          let errorMessage = `Server returned ${xhr.status}`;
+          try {
+            const errorData = JSON.parse(xhr.responseText);
+            errorMessage = errorData.error || errorMessage;
+          } catch (e) {
+            // responseText might not be JSON
+          }
+          reject(new Error(errorMessage));
         }
       };
       xhr.onerror = () => reject(new Error("Network error"));
       const fd = new FormData();
       fd.append("file", file);
       fd.append("target", target);
-      xhr.responseType = "arraybuffer";
       xhr.send(fd);
     });
   }
@@ -245,34 +285,246 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(`📄 You selected: ${templateName}`);
     });
   });
-});
-// ---------------- PROFILE FORM SUBMISSION ----------------
-document.getElementById("profileForm").addEventListener("submit", (e) => {
-  e.preventDefault();
 
-  const sanitize = (str) =>
-    str.replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
+  // ---------------- PROFILE FORM SUBMISSION ----------------
+  profileForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  const name = sanitize(document.getElementById("profileName").value);
-  const email = document.getElementById("profileEmail").value.trim();
-  const phone = sanitize(document.getElementById("profilePhone").value);
-  const location = sanitize(document.getElementById("profileLocation").value);
-  const bio = sanitize(document.getElementById("profileBio").value);
+    const sanitize = (str) =>
+      str.replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    alert("Invalid email format.");
-    return;
+    const name = sanitize(document.getElementById("profileName").value);
+    const email = document.getElementById("profileEmail").value.trim();
+    const phone = sanitize(document.getElementById("profilePhone").value);
+    const location = sanitize(document.getElementById("profileLocation").value);
+    const bio = sanitize(document.getElementById("profileBio").value);
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert("Invalid email format.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: name,
+          email: email,
+          phone: phone,
+          location: location,
+          bio: bio,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("✅ Profile saved securely!");
+        // Update displayed elements on the page
+        profileDisplayElements.userName.textContent = name;
+        profileDisplayElements.userEmail.textContent = email;
+        profileDisplayElements.userBio.textContent = bio;
+        profileDisplayElements.sidebarName.textContent = name;
+        profileDisplayElements.userPhone.textContent = phone;
+        profileDisplayElements.userLocation.textContent = location;
+
+        profileForm.classList.add("hidden"); // Hide form after saving
+        toggleEditProfileFormBtn.classList.remove("hidden"); // Show edit button
+      } else {
+        alert(`❌ Error saving profile: ${data.message || response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("An error occurred while saving profile.");
+    }
+  });
+
+  // ---------------- AVATAR FORM SUBMISSION ----------------
+  const avatarForm = document.getElementById("avatarForm");
+  avatarForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const avatarInput = document.getElementById("avatarInput");
+    const file = avatarInput.files[0];
+
+    if (!file) {
+      alert("Please select a file.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      const response = await fetch("/api/avatar/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("✅ Avatar updated successfully!");
+        const newAvatarUrl = data.avatar_url;
+        document.getElementById("sidebarAvatar").src = newAvatarUrl;
+        document.getElementById("userAvatar").src = newAvatarUrl;
+      } else {
+        alert(`❌ Error uploading avatar: ${data.error || response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      alert("An error occurred while uploading the avatar.");
+    }
+  });
+
+  // ---------------- ACTIVITY LOG ----------------
+  const activityLogContainer = document.getElementById("activityLogContainer");
+
+  async function loadActivityLog() {
+    activityLogContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">Loading activity...</p>`;
+
+    try {
+      const response = await fetch('/api/logs');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch logs: ${response.statusText}`);
+      }
+      let logs = await response.json();
+      
+      // Filter logs to only include desired actions
+      const filteredLogs = logs.filter(log => {
+        const lowerCaseAction = log.action.toLowerCase();
+        return lowerCaseAction.includes('file convert') || 
+               lowerCaseAction.includes('file upload') || 
+               lowerCaseAction.includes('file share') || 
+               lowerCaseAction.includes('template use');
+      });
+
+      if (filteredLogs.length === 0) {
+        activityLogContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">No relevant activity recorded yet.</p>`;
+      } else {
+        activityLogContainer.innerHTML = filteredLogs.map(log => `
+          <div class="flex items-start gap-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+              <i class="fa-solid ${getIconForAction(log.action)} text-gray-600 dark:text-gray-300"></i>
+            </div>
+            <div>
+              <p class="font-medium text-gray-800 dark:text-gray-200">${log.action}</p>
+              <p class="text-sm text-gray-600 dark:text-gray-400">${log.details}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">${new Date(log.timestamp).toLocaleString()}</p>
+            </div>
+          </div>
+        `).join('');
+      }
+    } catch (error) {
+      activityLogContainer.innerHTML = `<p class="text-center text-red-500">Error loading activity log.</p>`;
+      console.error("Error fetching activity log:", error);
+    }
   }
 
-  // ✅ Update main profile section
-  document.getElementById("userName").textContent = name;
-  document.getElementById("userEmail").textContent = email;
-  document.getElementById("userPhone").textContent = phone;
-  document.getElementById("userLocation").textContent = location;
-  document.getElementById("userBio").textContent = bio;
+  // Initial load of the default section's content
+  loadActivityLog();
 
-  // ✅ Update sidebar name
-  document.getElementById("sidebarName").textContent = name;
+  function getIconForAction(action) {
+    if (action.includes('Login')) return 'fa-right-to-bracket';
+    if (action.includes('Logout')) return 'fa-right-from-bracket';
+    if (action.includes('Profile')) return 'fa-user-pen';
+    if (action.includes('File')) return 'fa-file-arrow-up';
+    return 'fa-circle-info';
+  }
 
-  alert("✅ Profile saved securely!");
+  const filesListContainer = document.getElementById("filesListContainer");
+
+  async function loadUserFiles() {
+    const searchTerm = document.getElementById('fileSearchInput').value;
+    const url = new URL(window.location.origin + '/api/files');
+    if (searchTerm) {
+      url.searchParams.append('search', searchTerm);
+    }
+
+    filesListContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">Loading your files...</p>`;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch files: ${response.statusText}`);
+      }
+      const files = await response.json();
+
+      if (files.length === 0) {
+        filesListContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">You haven't converted any files yet.</p>`;
+      } else {
+        filesListContainer.innerHTML = files.map(file => `
+            <div class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 flex items-center justify-between" data-file-id="${file.id}">
+              <div class="flex items-center gap-4">
+                <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                  <i class="fa-solid fa-file-lines text-gray-600 dark:text-gray-300"></i>
+                </div>
+              <div>
+                <h3 class="font-medium truncate max-w-xs">${file.filename}</h3>
+                <p class="text-sm text-neutral-500">
+                  Converted to <strong>${file.format.toUpperCase()}</strong> on ${new Date(file.timestamp).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <a href="${file.url}" download class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-neutral-100 dark:hover:bg-neutral-800" title="Download">
+                <i class="fa-solid fa-download"></i>
+              </a>
+              <button class="delete-file-btn p-2 rounded-lg text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50" title="Delete" data-file-id="${file.id}">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+    } catch (error) {
+      filesListContainer.innerHTML = `<p class="text-center text-red-500">Error loading your files.</p>`;
+      console.error("Error fetching user files:", error);
+    }
+  }
+
+  // Event delegation for deleting files
+  filesListContainer.addEventListener('click', async (e) => {
+    const deleteButton = e.target.closest('.delete-file-btn');
+    if (!deleteButton) return;
+
+    const fileId = deleteButton.dataset.fileId;
+    const fileCard = deleteButton.closest('[data-file-id]');
+    const filename = fileCard.querySelector('h3').textContent;
+
+    if (confirm(`Are you sure you want to delete "${filename}"? This action cannot be undone.`)) {
+      try {
+        const response = await fetch(`/api/files/${fileId}`, {
+          method: 'DELETE',
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          fileCard.remove(); // Remove the file card from the UI
+          alert(data.message);
+        } else {
+          throw new Error(data.error || 'Failed to delete the file.');
+        }
+      } catch (error) {
+        console.error('Deletion error:', error);
+        alert(`Error: ${error.message}`);
+      }
+    }
+  });
+
+  // --- File Search ---
+  const fileSearchInput = document.getElementById('fileSearchInput');
+  let debounceTimer;
+
+  fileSearchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      // When the user types, we should reset the `filesLoaded` flag to force a reload
+      // For simplicity, we just call the load function directly.
+      loadUserFiles();
+    }, 300); // Wait 300ms after user stops typing before searching
+  });
 });

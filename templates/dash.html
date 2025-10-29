@@ -22,18 +22,17 @@
         <div class="bg-gray-200 dark:bg-gray-800 p-3 m-5 rounded-md shadow-lg">
           <div class="flex items-center space-x-3">
             <img
-              src="https://randomuser.me/api/portraits/men/1.jpg"
+              id="sidebarAvatar"
+              src="{{ user.avatar if user.avatar else 'https://randomuser.me/api/portraits/men/1.jpg' }}"
               alt="User Avatar"
               class="w-12 h-12 rounded-full"
             />
-            <div>
-              <p id="sidebarName" class="font-semibold text-base">
-                kashish sonpari
-              </p>
+            <a href="#" data-section="profile" class="nav-link hover:underline">
+              <p id="sidebarName" class="font-semibold text-base">{% if user.username %}{{ user.username }}{% else %}Guest User{% endif %}</p>
               <p id="sidebarRole" class="text-gray-500 text-xs">
                 Dashboard User
               </p>
-            </div>
+            </a>
           </div>
           <!-- Storage Info -->
           <div class="mt-4">
@@ -57,6 +56,7 @@
             &nbsp;Dashboard
           </h1>
         </div>
+        <!-- Navigation -->
         <nav class="flex-1 p-4 space-y-2">
           <button
             data-section="templates"
@@ -77,16 +77,16 @@
             <i class="fa-regular fa-share-nodes"></i> My Files
           </button>
           <button
-            data-section="profile"
-            class="nav-link w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-          >
-            <i class="fa-regular fa-user"></i> Profile
-          </button>
-          <button
             data-section="settings"
             class="nav-link w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
           >
             <i class="fa-regular fa-gear"></i>Settings
+          </button>
+          <button
+            data-section="activity"
+            class="nav-link w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+          >
+            <i class="fa-regular fa-list-check"></i> Activity Log
           </button>
         </nav>
         <div class="p-4 border-t border-gray-200 mx-4 dark:border-gray-700">
@@ -98,6 +98,22 @@
           </button>
         </div>
       </aside>
+
+      <!-- Flash messages container -->
+      <div class="fixed top-4 right-4 z-50 w-full max-w-sm">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-2 p-3 rounded-lg text-sm shadow-md {{ 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' if category=='success' else 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+      </div>
+
+
+
 
       <!-- Main Content -->
       <main class="flex-1 p-6 overflow-y-auto">
@@ -113,6 +129,23 @@
         </header>
 
         <!-- Sections -->
+        <section id="activitySection" class="">
+          <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+              <h3 class="text-xl font-semibold">Your Recent Activity</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Here's a list of recent events from your account.</p>
+            </div>
+            <div class="p-6">
+              <div id="activityLogContainer" class="space-y-4">
+                <!-- Activity logs will be dynamically loaded here -->
+                <div class="text-center text-gray-500 dark:text-gray-400">
+                  <p>Loading activity...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section id="templatesSection" class="hidden">
           <div
             class="relative w-[1130px] bg-gradient-to-br from-gray-100 to-white p-6 rounded-2xl shadow flex items-start justify-between overflow-hidden"
@@ -199,9 +232,7 @@
             <div class="p-6 bg-white dark:bg-gray-800 rounded-xl shadow">
               Files shared: <strong id="filesShared">0</strong>
             </div>
-            <div class="p-6 bg-white dark:bg-gray-800 rounded-xl shadow">
-              Total downloads: <strong id="downloads">--</strong>
-            </div>
+
           </div>
           <br />
           <div
@@ -413,6 +444,24 @@
               <input type="file" id="fileInput" class="hidden" />
             </label>
 
+            <!-- File Type (Permanent/Temporary) Selection -->
+            <div class="flex items-center justify-center gap-4 mt-4">
+                <label class="inline-flex items-center">
+                    <input type="radio" name="file_type" value="permanent" class="form-radio text-blue-600" checked id="fileTypePermanent">
+                    <span class="ml-2 text-gray-700 dark:text-gray-300">Permanent</span>
+                </label>
+                <label class="inline-flex items-center">
+                    <input type="radio" name="file_type" value="temporary" class="form-radio text-blue-600" id="fileTypeTemporary">
+                    <span class="ml-2 text-gray-700 dark:text-gray-300">Temporary</span>
+                </label>
+            </div>
+
+            <!-- Expiration Date for Temporary Files (initially hidden) -->
+            <div id="expirationDateContainer" class="mt-4 hidden">
+                <label for="expirationDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Expire On:</label>
+                <input type="datetime-local" id="expirationDate" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+            </div>
+
             <!-- File preview + format select -->
             <div class="flex items-center gap-3 mt-4">
               <div
@@ -512,6 +561,7 @@
             class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800"
           >
             <input
+              id="fileSearchInput"
               type="text"
               placeholder="Search files..."
               class="w-1/3 px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 focus:outline-none focus:ring focus:ring-indigo-500"
@@ -534,7 +584,7 @@
                 ⭐ Permanent
               </button>
               <button
-                class="px-4 py-2 rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-medium flex items-center gap-2"
+                id="uploadAndShareBtn" class="px-4 py-2 rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-medium flex items-center gap-2"
               >
                 <span>🔗</span> Upload & Share
               </button>
@@ -542,143 +592,9 @@
           </div>
 
           <!-- File List -->
-          <div class="p-6 space-y-4">
-            <!-- File 1 -->
-            <div
-              class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900"
-            >
-              <div class="flex items-start justify-between">
-                <div>
-                  <h3 class="font-medium">My Resume.pdf</h3>
-                  <p class="text-sm text-neutral-500">
-                    245 KB • Expired remaining • 3 downloads
-                  </p>
-                  <div class="mt-2">
-                    <input
-                      type="text"
-                      readonly
-                      value="https://dashboard.app/share/abc123"
-                      class="w-[120%] px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm"
-                    />
-                  </div>
-                  <p class="mt-2 text-sm text-neutral-500">Shared with:</p>
-                  <div class="flex gap-3 mt-1">
-                    <span
-                      class="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-sm"
-                      >J</span
-                    >
-                    <span
-                      class="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-sm"
-                      >S</span
-                    >
-                  </div>
-                </div>
-                <div class="flex flex-col items-end gap-2">
-                  <span
-                    class="px-2 py-1 text-xs rounded-lg bg-neutral-200 dark:bg-neutral-700"
-                    >Private</span
-                  >
-                  <div class="flex gap-2">
-                    <button
-                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                    >
-                      <i class="fa-regular fa-download"></i>
-                    </button>
-                    <button
-                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- File 2 -->
-            <div
-              class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900"
-            >
-              <div class="flex items-start justify-between">
-                <div>
-                  <h3 class="font-medium flex items-center gap-2">
-                    Project Proposal.docx
-                    <span
-                      class="px-2 py-1 text-xs rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-                      >Permanent</span
-                    >
-                  </h3>
-                  <p class="text-sm text-neutral-500">
-                    1.2 MB • Permanent • 12 downloads
-                  </p>
-                  <div class="mt-2">
-                    <input
-                      type="text"
-                      readonly
-                      value="https://dashboard.app/share/def456"
-                      class="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm"
-                    />
-                  </div>
-                </div>
-                <div class="flex flex-col items-end gap-2">
-                  <span
-                    class="px-2 py-1 text-xs rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-                    >Public</span
-                  >
-                  <div class="flex gap-2">
-                    <button
-                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                    >
-                      <i class="fa-regular fa-download"></i>
-                    </button>
-                    <button
-                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- File 3 -->
-            <div
-              class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900"
-            >
-              <div class="flex items-start justify-between">
-                <div>
-                  <h3 class="font-medium">Portfolio Images.zip</h3>
-                  <p class="text-sm text-neutral-500">
-                    15.8 MB • Expired remaining • 1 downloads
-                  </p>
-                  <div class="mt-2">
-                    <input
-                      type="text"
-                      readonly
-                      value="https://dashboard.app/share/ghi789"
-                      class="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm"
-                    />
-                  </div>
-                </div>
-                <div class="flex flex-col items-end gap-2">
-                  <span
-                    class="px-2 py-1 text-xs rounded-lg bg-neutral-200 dark:bg-neutral-700"
-                    >Private</span
-                  >
-                  <div class="flex gap-2">
-                    <button
-                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                    >
-                      <i class="fa-regular fa-download"></i>
-                    </button>
-                    <button
-                      class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div id="filesListContainer" class="p-6 space-y-4">
+            <!-- Dynamic file list will be injected here by dashboard.js -->
+            <p class="text-center text-gray-500 dark:text-gray-400">Loading your files...</p>
           </div>
         </section>
 
@@ -692,20 +608,20 @@
                 class="text-2xl font-semibold text-gray-800 dark:text-gray-100"
               >
                 Profile
-              </h3>
+              </h3>{% if user %}
               <button
-                id="editProfileBtn"
+                id="toggleEditProfileFormBtn"
                 class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
               >
                 ✏️ Edit
-              </button>
+              </button>{% endif %}
             </div>
 
             <!-- Profile Top -->
             <div class="flex items-center gap-6 mb-8">
               <img
                 id="userAvatar"
-                src="https://ui-avatars.com/api/?name=User&background=0D1117&color=fff"
+                src="{{ user.avatar if user.avatar else 'https://ui-avatars.com/api/?name=' ~ user.username | urlencode ~ '&background=0D1117&color=fff' }}"
                 alt="Profile"
                 class="w-20 h-20 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm"
               />
@@ -713,14 +629,12 @@
                 <h4
                   id="userName"
                   class="text-xl font-medium text-gray-900 dark:text-gray-100"
-                >
-                  Guest User
+                >{{ user.username }}
                 </h4>
                 <p
                   id="userEmail"
                   class="text-sm text-gray-500 dark:text-gray-400"
-                >
-                  Not logged in
+                >{{ user.email }}
                 </p>
               </div>
             </div>
@@ -736,8 +650,7 @@
                 <p
                   id="userTime"
                   class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100"
-                >
-                  --:--
+                >--:--
                 </p>
               </div>
               <div
@@ -749,8 +662,7 @@
                 <p
                   id="userIP"
                   class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100"
-                >
-                  Detecting...
+                >{{ user.ip }}
                 </p>
               </div>
               <div
@@ -760,9 +672,62 @@
                 <p
                   id="userLocation"
                   class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100"
-                >
-                  Detecting...
+                >{{ user.city }}, {{ user.country_name }}
                 </p>
+              </div>
+              <!-- Added Phone Display -->
+              <div
+                class="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+              >
+                <p class="text-sm text-gray-500 dark:text-gray-400">Phone</p>
+                <p
+                  id="userPhone"
+                  class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  {{ user.phone if user.phone else 'N/A' }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Profile Edit Form (initially hidden) -->
+            <form id="profileForm" class="mt-8 hidden">
+              <h4 class="text-xl font-medium mb-4 text-gray-900 dark:text-gray-100">Edit Profile Details</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label for="profileName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+                  <input type="text" id="profileName" name="profileName" value="{{ user.username }}"
+                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                </div>
+                <div>
+                  <label for="profileEmail" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                  <input type="email" id="profileEmail" name="profileEmail" value="{{ user.email }}"
+                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                </div>
+                <div>
+                  <label for="profilePhone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
+                  <input type="text" id="profilePhone" name="profilePhone" value="{{ user.phone }}"
+                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                </div>
+                <div>
+                  <label for="profileLocation" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
+                  <input type="text" id="profileLocation" name="profileLocation" value="{{ user.location }}"
+                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                </div>
+              </div>
+              <div class="mt-4">
+                <label for="profileBio" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Bio</label>
+                <textarea id="profileBio" name="profileBio" rows="3"
+                          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">{{ user.bio }}</textarea>
+              </div>
+              <div class="mt-6 flex justify-end gap-3">
+                <button type="button" id="cancelEditProfileBtn"
+                        class="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                  Cancel
+                </button>
+                <button type="submit"
+                        class="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">
+                  Save Changes
+                </button>
               </div>
             </div>
 
@@ -771,16 +736,16 @@
               class="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
             >
               <p class="text-sm text-gray-500 dark:text-gray-400">Bio</p>
-              <p id="userBio" class="mt-1 text-gray-900 dark:text-gray-100">
+              <p id="userBio" class="mt-1 text-gray-900 dark:text-gray-100">{% if user.bio %}{{ user.bio }}{% else %}
                 No bio added yet.
+                {% endif %}
               </p>
             </div>
 
             <!-- Actions -->
             <div class="mt-8 flex justify-end gap-3">
               <button
-                id="logoutBtn"
-                class="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                class="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition" 
               >
                 Logout
               </button>
@@ -833,8 +798,7 @@
                 <input
                   id="newUsername"
                   type="text"
-                  placeholder="Enter new username"
-                  class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200"
+                  placeholder="Enter new username" value="{{ user.username }}" class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200"
                 />
                 <button
                   id="saveUsername"
@@ -843,6 +807,31 @@
                   Save
                 </button>
               </div>
+            </div>
+
+            <!-- Change Avatar -->
+            <div class="p-4 bg-white dark:bg-gray-800 rounded-xl shadow">
+              <h3 class="font-medium text-gray-900 dark:text-gray-100">
+                Change Avatar
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                Update your profile picture
+              </p>
+              <form id="avatarForm" class="mt-3 flex gap-3">
+                <input
+                  id="avatarInput"
+                  type="file"
+                  accept="image/*"
+                  class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200"
+                />
+                <button
+                  id="saveAvatar"
+                  type="submit"
+                  class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+                >
+                  Save
+                </button>
+              </form>
             </div>
 
             <!-- Notifications -->
