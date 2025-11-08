@@ -35,6 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // If the activity log is the target, load its content
       if (target === 'activity') {
         loadActivityLog();
+      } else if (target === 'templates') {
+        loadStats();
       }
     });
   });
@@ -235,6 +237,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const expirationDateContainer = document.getElementById('expirationDateContainer');
+  const fileTypePermanent = document.getElementById('fileTypePermanent');
+  const fileTypeTemporary = document.getElementById('fileTypeTemporary');
+
+  fileTypePermanent.addEventListener('change', () => {
+    expirationDateContainer.classList.add('hidden');
+  });
+
+  fileTypeTemporary.addEventListener('change', () => {
+    expirationDateContainer.classList.remove('hidden');
+  });
+
   function uploadToServer(file, target) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -274,15 +288,198 @@ document.addEventListener("DOMContentLoaded", () => {
       const fd = new FormData();
       fd.append("file", file);
       fd.append("target", target);
+      fd.append("file_type", document.getElementById('fileTypePermanent').checked ? "permanent" : "temporary");
+      if (document.getElementById('fileTypeTemporary').checked) {
+        const expirationDate = document.getElementById('expirationDate').value;
+        if (expirationDate) {
+          fd.append("expiration_date", expirationDate);
+        }
+      }
       xhr.send(fd);
     });
   }
+
+  // ---------------- STATS ----------------
+  const templatesUsedEl = document.getElementById("templatesUsed");
+  const filesConvertedEl = document.getElementById("filesConverted");
+  const filesSharedEl = document.getElementById("filesShared");
+
+  async function loadStats() {
+    try {
+      const response = await fetch('/api/stats');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch stats: ${response.statusText}`);
+      }
+      const stats = await response.json();
+      templatesUsedEl.textContent = stats.templatesUsed;
+      filesConvertedEl.textContent = stats.filesConverted;
+      filesSharedEl.textContent = stats.filesShared;
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  }
+
+  // ---------------- MODALS ----------------
+  const uploadShareModal = document.getElementById("uploadShareModal");
+  const uploadAndShareBtn = document.getElementById("uploadAndShareBtn");
+  const cancelUploadShareBtn = document.getElementById("cancelUploadShareBtn");
+
+  uploadAndShareBtn?.addEventListener("click", () => {
+    uploadShareModal.classList.remove("hidden");
+  });
+
+  cancelUploadShareBtn?.addEventListener("click", () => {
+    uploadShareModal.classList.add("hidden");
+  });
+
+  const uploadShareForm = document.getElementById("uploadShareForm");
+
+  uploadShareForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fileInput = document.getElementById("fileToUpload");
+    const file = fileInput.files[0];
+
+    if (!file) {
+      alert("Please select a file.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`✅ File uploaded successfully!\nShareable link: ${data.download_url}`);
+        uploadShareModal.classList.add("hidden");
+        loadUserFiles(); // Refresh the file list
+      } else {
+        alert(`❌ Error uploading file: ${data.error || response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("An error occurred while uploading the file.");
+    }
+  });
+
+  // ---------------- SETTINGS ----------------
+  const saveUsernameBtn = document.getElementById("saveUsername");
+  saveUsernameBtn?.addEventListener("click", async () => {
+    const newUsername = document.getElementById("newUsername").value;
+    if (!newUsername) {
+      alert("Please enter a new username.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username: newUsername }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("✅ Username updated successfully!");
+        // Update username on the page
+        document.getElementById("userName").textContent = newUsername;
+        document.getElementById("sidebarName").textContent = newUsername;
+      } else {
+        alert(`❌ Error updating username: ${data.message || response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error updating username:", error);
+      alert("An error occurred while updating the username.");
+    }
+  });
+
+  const notifToggle = document.getElementById("notifToggle");
+
+  // Fetch and set the initial state of the notification toggle
+  fetch("/api/settings")
+    .then(res => res.json())
+    .then(data => {
+      notifToggle.checked = data.notifications;
+    });
+
+  const languageSelect = document.getElementById("languageSelect");
+
+  // Fetch and set the initial state of the language select
+  fetch("/api/settings")
+    .then(res => res.json())
+    .then(data => {
+      notifToggle.checked = data.notifications;
+      languageSelect.value = data.language;
+    });
+
+  languageSelect?.addEventListener("change", async () => {
+    const language = languageSelect.value;
+    try {
+      const response = await fetch("/api/settings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ language: language }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(`❌ Error updating language settings: ${data.message || response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error updating language settings:", error);
+      alert("An error occurred while updating the language settings.");
+    }
+  });
+
+  notifToggle?.addEventListener("change", async () => {
+    const enabled = notifToggle.checked;
+    try {
+      const response = await fetch("/api/settings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ notifications: enabled }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(`❌ Error updating notification settings: ${data.message || response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error updating notification settings:", error);
+      alert("An error occurred while updating the notification settings.");
+    }
+  });
 
   // ---------------- TEMPLATES ----------------
   document.querySelectorAll("#templatesSection button").forEach((btn) => {
     btn.addEventListener("click", () => {
       const templateName = btn.closest("div").querySelector("h3").textContent;
-      alert(`📄 You selected: ${templateName}`);
+      // For now, let's just download a dummy file.
+      // In a real application, you would fetch the template from the server.
+      const blob = new Blob([`This is a dummy ${templateName} template.`], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${templateName.toLowerCase().replace(/\s+/g, "-")}-template.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     });
   });
 
@@ -465,6 +662,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 <h3 class="font-medium truncate max-w-xs">${file.filename}</h3>
                 <p class="text-sm text-neutral-500">
                   Converted to <strong>${file.format.toUpperCase()}</strong> on ${new Date(file.timestamp).toLocaleDateString()}
+                  <span class="ml-2 px-2 py-1 text-xs rounded-full ${file.file_type === 'temporary' ? 'bg-yellow-200 text-yellow-800' : 'bg-green-200 text-green-800'}">${file.file_type}</span>
+                  ${file.file_type === 'temporary' && file.expires_at ? `<span class="ml-2 text-xs text-red-500">Expires on ${new Date(file.expires_at).toLocaleDateString()}</span>` : ''}
                 </p>
               </div>
             </div>

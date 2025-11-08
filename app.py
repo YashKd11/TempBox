@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.secret_key = 'a-very-secret-and-static-key-for-development'
 
 # MongoDB Configuration
-MONGO_URI = "mongodb+srv://:@clustertest.qwyt70x.mongodb.net/" # Replace with your MongoDB connection string if different
+MONGO_URI = "mongodb+srv://panda:sonu@clustertest.qwyt70x.mongodb.net/" # Replace with your MongoDB connection string if different
 client = MongoClient(MONGO_URI)
 db = client.tempbox_db # Your database name
 users_collection = db.users # Collection for users
@@ -94,7 +94,9 @@ def signup():
             'country_name': '',
             'city': '',
             'org': '',
-            'avatar': None
+            'avatar': None,
+            'notifications': True,
+            'language': 'en'
         })
         flash('Account created successfully! Please log in.', 'success')
         return redirect(url_for('login')) # Redirect to login after successful signup
@@ -258,13 +260,22 @@ def api_convert():
         # and the conversion would happen here.
         download_url = url_for('download_converted_file', filename=filename, _external=True)
 
+        file_type = request.form.get('file_type', 'permanent')
+        expires_at = None
+        if file_type == 'temporary':
+            expiration_date_str = request.form.get('expiration_date')
+            if expiration_date_str:
+                expires_at = datetime.fromisoformat(expiration_date_str)
+
         # You might want to store metadata about the conversion in files_collection
         files_collection.insert_one({
             'user_id': ObjectId(session['user_id']),
             'original_filename': filename,
             'target_format': target_format,
             'converted_url': download_url,
-            'timestamp': datetime.utcnow()
+            'timestamp': datetime.utcnow(),
+            'file_type': file_type,
+            'expires_at': expires_at
         })
 
         user = users_collection.find_one({'_id': ObjectId(session['user_id'])})
@@ -333,6 +344,8 @@ def get_user_files():
             'format': file_doc.get('target_format', 'N/A'),
             'url': file_doc.get('converted_url'),
             'timestamp': file_doc.get('timestamp').isoformat(),
+            'file_type': file_doc.get('file_type', 'permanent'),
+            'expires_at': file_doc.get('expires_at').isoformat() if file_doc.get('expires_at') else None
         })
     return jsonify(files_list)
 
@@ -374,6 +387,88 @@ def delete_file(file_id):
     })
 
     return jsonify({'message': 'File deleted successfully'}), 200
+
+@app.route('/api/upload', methods=['POST'])
+@login_required
+def api_upload():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    if file:
+        filename = file.filename
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
+
+        download_url = url_for('download_converted_file', filename=filename, _external=True)
+
+        files_collection.insert_one({
+            'user_id': ObjectId(session['user_id']),
+            'original_filename': filename,
+            'target_format': 'shared',
+            'converted_url': download_url,
+            'timestamp': datetime.utcnow()
+        })
+
+        user = users_collection.find_one({'_id': ObjectId(session['user_id'])})
+        logs_collection.insert_one({
+            'user_id': user['_id'],
+            'username': user.get('username', 'Unknown User'),
+            'action': 'file_share',
+            'details': f"Shared file: {filename}",
+            'timestamp': datetime.utcnow()
+        })
+
+        return jsonify({'download_url': download_url}), 200
+    return jsonify({'error': 'File processing failed'}), 500
+
+@app.route('/api/settings', methods=['GET', 'POST'])
+@login_required
+def api_settings():
+    user_id = session['user_id']
+    if request.method == 'GET':
+        user = users_collection.find_one({'_id': ObjectId(user_id)})
+        if user:
+            return jsonify({
+                'notifications': user.get('notifications', True),
+                'language': user.get('language', 'en')
+            }), 200
+        return jsonify({'message': 'User not found'}), 404
+    elif request.method == 'POST':
+        data = request.get_json()
+        update_fields = {}
+        if 'notifications' in data:
+            update_fields['notifications'] = data['notifications']
+        if 'language' in data:
+            update_fields['language'] = data['language']
+        
+        if update_fields:
+            users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': update_fields})
+            return jsonify({'message': 'Settings updated successfully'}), 200
+        return jsonify({'message': 'No settings to update'}), 400
+
+@app.route('/api/stats')
+@login_required
+def get_user_stats():
+    user_id = session['user_id']
+
+    # Count files converted by the user
+    files_converted = files_collection.count_documents({'user_id': ObjectId(user_id)})
+
+    # For templates used and files shared, we need to add logging or tracking for these events.
+    # For now, let's simulate these stats.
+    templates_used = logs_collection.count_documents({'user_id': ObjectId(user_id), 'action': 'template_use'})
+    files_shared = logs_collection.count_documents({'user_id': ObjectId(user_id), 'action': 'file_share'})
+
+    return jsonify({
+        'templatesUsed': templates_used,
+        'filesConverted': files_converted,
+        'filesShared': files_shared
+    })
 
 if(__name__ == "__main__"):
     app.run(debug=True)
