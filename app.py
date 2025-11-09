@@ -4,6 +4,25 @@ from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson.objectid import ObjectId # To work with MongoDB's default _id
 from datetime import datetime
+from PIL import Image
+import pandas as pd
+from docx2pdf import convert as docx_to_pdf_convert
+from pdf2docx import Converter
+import moviepy.editor as mp
+import zipfile
+import rarfile
+import py7zr
+import subprocess
+import json
+import markdown
+from pillow_heif import register_heif_opener
+import xmltodict
+import sqlite3
+import nbformat
+from nbconvert import PythonExporter
+
+register_heif_opener()
+
 
 app = Flask(__name__)
 # A static secret key is required to keep sessions persistent across server restarts.
@@ -240,61 +259,195 @@ def api_convert():
         return jsonify({'error': 'No file part'}), 400
 
     file = request.files['file']
-    target_format = request.form.get('target', 'server')
+    target_format = request.form.get('target')
 
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
-    if file:
-        # For a real application, you'd save the file securely,
-        # perform conversion (e.g., using libraries like Pillow for images,
-        # or external tools for other formats), and then return a download link.
-        # For this example, we'll just simulate saving and returning a dummy URL.
+    if file and target_format:
+        original_filename = file.filename
+        base_name, input_ext = os.path.splitext(original_filename)
+        input_ext = input_ext.lower()
 
-        filename = file.filename
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        filepath = os.path.join(UPLOAD_FOLDER, original_filename)
         file.save(filepath)
 
-        # Simulate conversion and generate a download URL
-        # In a real scenario, this would be a link to the converted file
-        # and the conversion would happen here.
-        download_url = url_for('download_converted_file', filename=filename, _external=True)
+        output_filename = f"{base_name}.{target_format}"
+        output_path = os.path.join(UPLOAD_FOLDER, output_filename)
+        
+        try:
+            # Image conversions
+            if input_ext in ['.jpg', '.jpeg'] and target_format == 'png':
+                Image.open(filepath).save(output_path)
+            elif input_ext in ['.jpg', '.jpeg'] and target_format == 'pdf':
+                Image.open(filepath).convert('RGB').save(output_path)
+            elif input_ext == '.png' and target_format == 'jpg':
+                Image.open(filepath).convert('RGB').save(output_path)
+            # PDF/DOCX conversions
+            elif input_ext == '.pdf' and target_format == 'docx':
+                cv = Converter(filepath)
+                cv.convert(output_path, start=0, end=None)
+                cv.close()
+            elif input_ext == '.docx' and target_format == 'pdf':
+                docx_to_pdf_convert(filepath, output_path)
+            elif input_ext == '.pdf' and target_format == 'jpg':
+                # Requires PyMuPDF (fitz)
+                import fitz
+                doc = fitz.open(filepath)
+                page = doc.load_page(0) # first page
+                pix = page.get_pixmap()
+                pix.save(output_path)
+            elif input_ext == '.pdf' and target_format == 'txt':
+                import fitz
+                doc = fitz.open(filepath)
+                text = ""
+                for page in doc:
+                    text += page.get_text()
+                with open(output_path, "w", encoding="utf-8") as text_file:
+                    text_file.write(text)
+            # CSV/XLSX conversions
+            elif input_ext == '.csv' and target_format == 'xlsx':
+                pd.read_csv(filepath).to_excel(output_path, index=False)
+            elif input_ext == '.xlsx' and target_format == 'csv':
+                pd.read_excel(filepath).to_csv(output_path, index=False)
+            # Text to PDF
+            elif input_ext == '.txt' and target_format == 'pdf':
+                # Using markdown conversion as a simple way
+                with open(filepath, 'r') as f:
+                    text = f.read()
+                html = markdown.markdown(text)
+                # Requires weasyprint
+                from weasyprint import HTML
+                HTML(string=html).write_pdf(output_path)
+            # HTML to PDF
+            elif input_ext == '.html' and target_format == 'pdf':
+                from weasyprint import HTML
+                HTML(filepath).write_pdf(output_path)
+            # Audio/Video conversions
+            elif input_ext == '.mp4' and target_format == 'mp3':
+                mp.VideoFileClip(filepath).audio.write_audiofile(output_path)
+            elif input_ext == '.mp3' and target_format == 'wav':
+                mp.AudioFileClip(filepath).write_audiofile(output_path)
+            elif input_ext == '.wav' and target_format == 'mp3':
+                mp.AudioFileClip(filepath).write_audiofile(output_path)
+            elif input_ext == '.mp4' and target_format == 'mkv':
+                # This is more of a container change, can be done with moviepy
+                clip = mp.VideoFileClip(filepath)
+                clip.write_videofile(output_path, codec='copy')
+            elif input_ext == '.mov' and target_format == 'mp4':
+                clip = mp.VideoFileClip(filepath)
+                clip.write_videofile(output_path)
+            # Archive conversions
+            elif input_ext == '.zip' and target_format == 'rar':
+                # Note: rarfile can read but not write rar files. This is a placeholder.
+                # Creating rar archives requires the proprietary rar utility.
+                # We will simulate by just re-zipping it.
+                with zipfile.ZipFile(filepath, 'r') as zip_ref:
+                    zip_ref.extractall(output_path + "_temp")
+                # This part is non-functional without rar command line tool
+                # subprocess.run(['rar', 'a', output_path, output_path + "_temp"])
+                return jsonify({'error': 'Conversion from zip to rar is not supported'}), 501
+            elif input_ext == '.rar' and target_format == 'zip':
+                with rarfile.RarFile(filepath) as opened_rar:
+                    with zipfile.ZipFile(output_path, 'w') as zip_file:
+                        for file_info in opened_rar.infolist():
+                            zip_file.writestr(file_info.filename, opened_rar.read(file_info.filename))
+            elif input_ext == '.7z' and target_format == 'zip':
+                with py7zr.SevenZipFile(filepath, mode='r') as z:
+                    z.extractall(path=output_path + "_temp")
+                with zipfile.ZipFile(output_path, 'w') as zipf:
+                    for root, _, files in os.walk(output_path + "_temp"):
+                        for file in files:
+                            zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), output_path + "_temp"))
+            # Code conversions
+            elif input_ext == '.py' and target_format == 'exe':
+                # This is a complex operation and might not be suitable for a web server
+                # It's platform dependent and slow.
+                return jsonify({'error': 'py to exe conversion is too complex for this service'}), 501
+            elif input_ext == '.ts' and target_format == 'js':
+                # Requires typescript compiler `tsc` to be in PATH
+                subprocess.run(['tsc', filepath, '--outFile', output_path], check=True)
+            elif input_ext == '.scss' and target_format == 'css':
+                # Requires `libsass`
+                import sass
+                with open(filepath, 'r') as scss_file:
+                    css = sass.compile(string=scss_file.read())
+                with open(output_path, 'w') as css_file:
+                    css_file.write(css)
+            # Data format conversions
+            elif input_ext == '.json' and target_format == 'csv':
+                pd.read_json(filepath).to_csv(output_path, index=False)
+            elif input_ext == '.csv' and target_format == 'json':
+                pd.read_csv(filepath).to_json(output_path, orient='records')
+            # Misc conversions
+            elif input_ext == '.md' and target_format == 'pdf':
+                with open(filepath, 'r') as f:
+                    html_text = markdown.markdown(f.read())
+                from weasyprint import HTML
+                HTML(string=html_text).write_pdf(output_path)
+            elif input_ext == '.svg' and target_format == 'png':
+                # Requires cairosvg
+                import cairosvg
+                cairosvg.svg2png(url=filepath, write_to=output_path)
+            elif input_ext == '.heic' and target_format == 'jpg':
+                Image.open(filepath).convert('RGB').save(output_path)
+            elif input_ext == '.xml' and target_format == 'json':
+                with open(filepath) as xml_file:
+                    data_dict = xmltodict.parse(xml_file.read())
+                with open(output_path, 'w') as json_file:
+                    json.dump(data_dict, json_file, indent=4)
+            elif input_ext == '.sqlite' and target_format == 'csv':
+                conn = sqlite3.connect(filepath)
+                cursor = conn.cursor()
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+                tables = cursor.fetchall()
+                # This will convert only the first table to a csv
+                if tables:
+                    table_name = tables[0][0]
+                    df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
+                    df.to_csv(output_path, index=False)
+                conn.close()
+            elif input_ext == '.ipynb' and target_format == 'py':
+                with open(filepath) as f:
+                    nb = nbformat.read(f, as_version=4)
+                exporter = PythonExporter()
+                source, _ = exporter.from_notebook_node(nb)
+                with open(output_path, 'w') as f:
+                    f.write(source)
+            else:
+                return jsonify({'error': f'Conversion from {input_ext} to {target_format} is not supported'}), 400
 
-        file_type = request.form.get('file_type', 'permanent')
-        expires_at = None
-        if file_type == 'temporary':
-            expiration_date_str = request.form.get('expiration_date')
-            if expiration_date_str:
-                expires_at = datetime.fromisoformat(expiration_date_str)
+        except Exception as e:
+            return jsonify({'error': f'An error occurred during conversion: {str(e)}'}), 500
 
-        # You might want to store metadata about the conversion in files_collection
+        download_url = url_for('download_converted_file', filename=output_filename, _external=True)
+
         files_collection.insert_one({
             'user_id': ObjectId(session['user_id']),
-            'original_filename': filename,
+            'original_filename': original_filename,
+            'converted_filename': output_filename,
             'target_format': target_format,
             'converted_url': download_url,
             'timestamp': datetime.utcnow(),
-            'file_type': file_type,
-            'expires_at': expires_at
         })
 
         user = users_collection.find_one({'_id': ObjectId(session['user_id'])})
-        # --- Add File Convert Log ---
         logs_collection.insert_one({
             'user_id': user['_id'],
             'username': user.get('username', 'Unknown User'),
             'action': 'file_convert',
-            'details': f"Converted '{filename}' to '{target_format}'",
+            'details': f"Converted '{original_filename}' to '{output_filename}'",
             'timestamp': datetime.utcnow()
         })
 
         return jsonify({'download_url': download_url}), 200
+
     return jsonify({'error': 'File processing failed'}), 500
 
 # Route to serve converted files (for demonstration)
 @app.route('/downloads/<filename>')
 @login_required
-def download_converted_file(filename):
+def download_converted_file(filename):  #####
     # In a real app, you'd check if the user has permission to download this file
     # and serve it from a secure location.
     return send_from_directory(UPLOAD_FOLDER, filename)

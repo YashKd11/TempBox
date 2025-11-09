@@ -129,13 +129,53 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusText = document.getElementById("convertStatus");
   const resultBox = document.getElementById("convertResult");
 
+  const conversionMap = {
+    'jpg': ['png', 'pdf'],
+    'jpeg': ['png', 'pdf'],
+    'png': ['jpg', 'gif', 'pdf'],
+    'pdf': ['docx', 'jpg', 'txt'],
+    'docx': ['pdf'],
+    'csv': ['xlsx', 'json'],
+    'xlsx': ['csv'],
+    'txt': ['pdf'],
+    'html': ['pdf'],
+    'mp4': ['mp3', 'mkv'],
+    'mp3': ['wav'],
+    'wav': ['mp3'],
+    'mov': ['mp4'],
+    'zip': ['rar'],
+    'rar': ['zip'],
+    '7z': ['zip'],
+    'py': ['exe'],
+    'ts': ['js'],
+    'scss': ['css'],
+    'json': ['csv'],
+    'md': ['pdf'],
+    'svg': ['png'],
+    'heic': ['jpg'],
+    'xml': ['json'],
+    'sqlite': ['csv'],
+    'ipynb': ['py']
+  };
+
   fileInput?.addEventListener("change", () => {
     resultBox.innerHTML = "";
+    targetFormat.innerHTML = ''; // Clear previous options
+
     if (!fileInput.files.length) {
       filePreview.textContent = "";
+      const defaultOption = document.createElement('option');
+      defaultOption.textContent = 'Select a file first';
+      targetFormat.appendChild(defaultOption);
+      targetFormat.disabled = true;
       return;
     }
+
+    targetFormat.disabled = false;
     const file = fileInput.files[0];
+    const fileName = file.name;
+    const fileExtension = fileName.split('.').pop().toLowerCase();
+
     filePreview.innerHTML = `
       <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-lg shadow w-full">
         <span class="truncate">${file.name}</span>
@@ -144,6 +184,22 @@ document.addEventListener("DOMContentLoaded", () => {
         )} KB)</span>
       </div>
     `;
+
+    const allowedConversions = conversionMap[fileExtension];
+
+    if (allowedConversions) {
+      allowedConversions.forEach(format => {
+        const option = document.createElement('option');
+        option.value = format;
+        option.textContent = format.toUpperCase();
+        targetFormat.appendChild(option);
+      });
+    } else {
+      const option = document.createElement('option');
+      option.textContent = 'No conversions available';
+      targetFormat.appendChild(option);
+      targetFormat.disabled = true;
+    }
   });
 
   const showProgress = (pct, text) => {
@@ -161,7 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
     convertBtn.classList.toggle("opacity-60", state);
   };
 
-  convertBtn?.addEventListener("click", async () => {
+  convertBtn?.addEventListener("click", async () => { //async means that this function have to wait for the action to complete
     resultBox.innerHTML = "";
     if (!fileInput.files.length) {
       resultBox.innerHTML = `<div class="text-red-500">Please select a file first.</div>`;
@@ -169,7 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const file = fileInput.files[0];
-    const target = targetFormat.value;
+    const target = targetFormat.value; //dropdown ka selection
     let chosenTarget = target;
     if (target === "same") {
       if (file.type.startsWith("image/"))
