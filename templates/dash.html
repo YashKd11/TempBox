@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="static/dashboard.js"></script>
+    <script defer src="/2.js"></script>
     <script
       src="https://kit.fontawesome.com/2cb49ad06d.js"
       crossorigin="anonymous"
@@ -38,12 +38,12 @@
           <div class="mt-4">
             <p class="text-gray-500 text-xs">Storage</p>
             <div class="flex items-center">
-              <p class="font-semibold text-sm">2.1 GB / 10 GB</p>
+              <p class="font-semibold text-sm">0 GB / 10 GB</p>
             </div>
 
             <!-- Progress Bar -->
             <div class="bg-gray-300 rounded-full mt-1 h-2">
-              <div class="bg-black h-2 rounded" style="width: 21%"></div>
+              <div class="bg-black h-2 rounded" style="width: 0%"></div>
             </div>
           </div>
         </div>
@@ -100,7 +100,7 @@
       </aside>
 
       <!-- Flash messages container -->
-      <div class="fixed top-4 right-4 z-50 w-full max-w-sm">
+      <!-- <div class="fixed top-4 right-4 z-50 w-full max-w-sm">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -110,7 +110,7 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-      </div>
+      </div> -->
 
 
 
@@ -122,10 +122,10 @@
           <h2 id="sectionTitle" class="text-2xl font-semibold">Dashboard</h2>
           <button
             id="darkModeToggle"
-            class="p-2 rounded-full bg-gray-200 dark:bg-gray-700"
+            class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 toggle-btn transition"
           >
             🌙
-          </button>
+        </button>
         </header>
 
         <!-- Sections -->
@@ -613,7 +613,7 @@
                 id="toggleEditProfileFormBtn"
                 class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
               >
-                ✏️ Edit
+                ✏ Edit
               </button>{% endif %}
             </div>
 

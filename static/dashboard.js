@@ -1,14 +1,34 @@
 // Secure Dashboard JS
 document.addEventListener("DOMContentLoaded", () => {
   // ---------------- DARK MODE ----------------
-  const darkToggle = document.getElementById("darkModeToggle");
-  if (localStorage.getItem("darkMode") === "true") {
-    document.body.classList.add("dark");
+  const btn = document.getElementById("darkModeToggle");
+  const root = document.documentElement;
+
+  // Load initial theme from localStorage
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "dark") {
+    root.classList.add("dark");
   }
-  darkToggle?.addEventListener("click", () => {
-    document.body.classList.toggle("dark");
-    localStorage.setItem("darkMode", document.body.classList.contains("dark"));
+
+  // Set initial button text
+  updateButtonText();
+
+  btn.addEventListener("click", () => {
+    const isDark = root.classList.toggle("dark");
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+    updateButtonText();
   });
+
+  function updateButtonText() {
+    const isDark = root.classList.contains("dark");
+    btn.textContent = isDark ? "🌙 Dark Mode" : "🌞 Light Mode";
+
+    // Sync the settings toggle checkbox
+    const settingsToggle = document.getElementById("darkModeSwitch");
+    if (settingsToggle) {
+      settingsToggle.checked = isDark;
+    }
+  }
 
   // ---------------- SECTION SWITCHING ----------------
   const sections = {
@@ -21,23 +41,27 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Hide all sections except the default one (activity) on load
-  Object.keys(sections).forEach(key => sections[key].classList.toggle("hidden", key !== 'activity'));
+  Object.keys(sections).forEach((key) =>
+    sections[key].classList.toggle("hidden", key !== "activity")
+  );
 
   document.querySelectorAll(".nav-link").forEach((btn) => {
     btn.addEventListener("click", () => {
       const target = btn.dataset.section;
       document.getElementById("sectionTitle").textContent =
-        target === 'activity' ? 'Activity Log' : target.charAt(0).toUpperCase() + target.slice(1);
+        target === "activity"
+          ? "Activity Log"
+          : target.charAt(0).toUpperCase() + target.slice(1);
       Object.keys(sections).forEach((key) => {
         sections[key].classList.toggle("hidden", key !== target);
       });
 
       // If the activity log is the target, load its content
-      if (target === 'activity') {
+      if (target === "activity") {
         loadActivityLog();
-      } else if (target === 'templates') {
+      } else if (target === "templates") {
         loadStats();
-      } else if (target === 'files') {
+      } else if (target === "files") {
         loadUserFiles();
       }
     });
@@ -58,11 +82,9 @@ document.addEventListener("DOMContentLoaded", () => {
     .then((res) => res.json())
     .then((data) => {
       document.getElementById("userIP").textContent = data.ip || "Unavailable";
-      document.getElementById(
-        "userLocation"
-      ).textContent = `${data.city || "Unavailable"}, ${
-        data.country_name || "Unavailable"
-      }`;
+      document.getElementById("userLocation").textContent = `${
+        data.city || "Unavailable"
+      }, ${data.country_name || "Unavailable"}`;
 
       // Send IP/location data to backend to update user profile
       fetch("/api/profile", {
@@ -112,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch("/api/logout", { method: "POST", credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
-        alert(`✅ ${data.message}`);
+        alert(✅ ${data.message});
         window.location.href = "/login"; // Redirect to login page
       })
       .catch((err) => {
@@ -132,42 +154,42 @@ document.addEventListener("DOMContentLoaded", () => {
   const resultBox = document.getElementById("convertResult");
 
   const conversionMap = {
-    'jpg': ['png', 'pdf'],
-    'jpeg': ['png', 'pdf'],
-    'png': ['jpg', 'gif', 'pdf'],
-    'pdf': ['docx', 'jpg', 'txt'],
-    'docx': ['pdf'],
-    'csv': ['xlsx', 'json'],
-    'xlsx': ['csv'],
-    'txt': ['pdf'],
-    'html': ['pdf'],
-    'mp4': ['mp3', 'mkv'],
-    'mp3': ['wav'],
-    'wav': ['mp3'],
-    'mov': ['mp4'],
-    'zip': ['rar'],
-    'rar': ['zip'],
-    '7z': ['zip'],
-    'py': ['exe'],
-    'ts': ['js'],
-    'scss': ['css'],
-    'json': ['csv'],
-    'md': ['pdf'],
-    'svg': ['png'],
-    'heic': ['jpg'],
-    'xml': ['json'],
-    'sqlite': ['csv'],
-    'ipynb': ['py']
+    jpg: ["png", "pdf"],
+    jpeg: ["png", "pdf"],
+    png: ["jpg", "gif", "pdf"],
+    pdf: ["docx", "jpg", "txt"],
+    docx: ["pdf"],
+    csv: ["xlsx", "json"],
+    xlsx: ["csv"],
+    txt: ["pdf"],
+    html: ["pdf"],
+    mp4: ["mp3", "mkv"],
+    mp3: ["wav"],
+    wav: ["mp3"],
+    mov: ["mp4"],
+    zip: ["rar"],
+    rar: ["zip"],
+    "7z": ["zip"],
+    py: ["exe"],
+    ts: ["js"],
+    scss: ["css"],
+    json: ["csv"],
+    md: ["pdf"],
+    svg: ["png"],
+    heic: ["jpg"],
+    xml: ["json"],
+    sqlite: ["csv"],
+    ipynb: ["py"],
   };
 
   fileInput?.addEventListener("change", () => {
     resultBox.innerHTML = "";
-    targetFormat.innerHTML = ''; // Clear previous options
+    targetFormat.innerHTML = ""; // Clear previous options
 
     if (!fileInput.files.length) {
       filePreview.textContent = "";
-      const defaultOption = document.createElement('option');
-      defaultOption.textContent = 'Select a file first';
+      const defaultOption = document.createElement("option");
+      defaultOption.textContent = "Select a file first";
       targetFormat.appendChild(defaultOption);
       targetFormat.disabled = true;
       return;
@@ -176,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
     targetFormat.disabled = false;
     const file = fileInput.files[0];
     const fileName = file.name;
-    const fileExtension = fileName.split('.').pop().toLowerCase();
+    const fileExtension = fileName.split(".").pop().toLowerCase();
 
     filePreview.innerHTML = `
       <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-lg shadow w-full">
@@ -190,15 +212,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const allowedConversions = conversionMap[fileExtension];
 
     if (allowedConversions) {
-      allowedConversions.forEach(format => {
-        const option = document.createElement('option');
+      allowedConversions.forEach((format) => {
+        const option = document.createElement("option");
         option.value = format;
         option.textContent = format.toUpperCase();
         targetFormat.appendChild(option);
       });
     } else {
-      const option = document.createElement('option');
-      option.textContent = 'No conversions available';
+      const option = document.createElement("option");
+      option.textContent = "No conversions available";
       targetFormat.appendChild(option);
       targetFormat.disabled = true;
     }
@@ -206,11 +228,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const showProgress = (pct, text) => {
     progressWrap.classList.remove("hidden");
-    progressBar.style.width = `${pct}%`;
-    statusText.textContent = text || `${pct}%`;
+    progressBar.style.width = ${pct}%;
+    statusText.textContent = text || ${pct}%;
   };
   const resetProgress = () => {
-    progressBar.style.width = `0%`;
+    progressBar.style.width = 0%;
     progressWrap.classList.add("hidden");
     statusText.textContent = "";
   };
@@ -219,10 +241,11 @@ document.addEventListener("DOMContentLoaded", () => {
     convertBtn.classList.toggle("opacity-60", state);
   };
 
-  convertBtn?.addEventListener("click", async () => { //async means that this function have to wait for the action to complete
+  convertBtn?.addEventListener("click", async () => {
+    //async means that this function have to wait for the action to complete
     resultBox.innerHTML = "";
     if (!fileInput.files.length) {
-      resultBox.innerHTML = `<div class="text-red-500">Please select a file first.</div>`;
+      resultBox.innerHTML = <div class="text-red-500">Please select a file first.</div>;
       return;
     }
 
@@ -231,7 +254,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let chosenTarget = target;
     if (target === "same") {
       if (file.type.startsWith("image/"))
-        chosenTarget = file.type.includes("png") ? "png" : "jpg"; // Client-side image conversion
+        chosenTarget = file.type.includes("png") ? "png" : "jpg";
+      // Client-side image conversion
       else chosenTarget = "server";
     }
 
@@ -239,10 +263,16 @@ document.addEventListener("DOMContentLoaded", () => {
     showProgress(5, "Preparing...");
 
     try {
-      if (file.type.startsWith("image/") && (chosenTarget === "png" || chosenTarget === "jpg")) {
+      if (
+        file.type.startsWith("image/") &&
+        (chosenTarget === "png" || chosenTarget === "jpg")
+      ) {
         await convertImageClientSide(file, chosenTarget);
       } else {
-        await uploadToServer(file, chosenTarget === "same" ? "server" : chosenTarget);
+        await uploadToServer(
+          file,
+          chosenTarget === "same" ? "server" : chosenTarget
+        );
       }
     } catch (err) {
       resultBox.innerHTML = `<div class="text-red-500">Conversion Error: ${
@@ -295,16 +325,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const expirationDateContainer = document.getElementById('expirationDateContainer');
-  const fileTypePermanent = document.getElementById('fileTypePermanent');
-  const fileTypeTemporary = document.getElementById('fileTypeTemporary');
+  const expirationDateContainer = document.getElementById(
+    "expirationDateContainer"
+  );
+  const fileTypePermanent = document.getElementById("fileTypePermanent");
+  const fileTypeTemporary = document.getElementById("fileTypeTemporary");
 
-  fileTypePermanent.addEventListener('change', () => {
-    expirationDateContainer.classList.add('hidden');
+  fileTypePermanent.addEventListener("change", () => {
+    expirationDateContainer.classList.add("hidden");
   });
 
-  fileTypeTemporary.addEventListener('change', () => {
-    expirationDateContainer.classList.remove('hidden');
+  fileTypeTemporary.addEventListener("change", () => {
+    expirationDateContainer.classList.remove("hidden");
   });
 
   function uploadToServer(file, target) {
@@ -314,7 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
           const pct = Math.round((e.loaded / e.total) * 70);
-          showProgress(pct, `Uploading... ${pct}%`);
+          showProgress(pct, Uploading... ${pct}%);
         }
       };
       xhr.onload = () => {
@@ -322,7 +354,7 @@ document.addEventListener("DOMContentLoaded", () => {
           try {
             const responseData = JSON.parse(xhr.responseText); // Expect JSON response
             if (responseData.download_url) {
-              resultBox.innerHTML = `<a href="${responseData.download_url}" download="converted-file" class="inline-block px-4 py-2 bg-green-500 text-white rounded">Download</a>`;
+              resultBox.innerHTML = <a href="${responseData.download_url}" download="converted-file" class="inline-block px-4 py-2 bg-green-500 text-white rounded">Download</a>;
               showProgress(100, "Converted");
               resolve();
             } else {
@@ -332,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
             reject(new Error("Failed to parse server response."));
           }
         } else {
-          let errorMessage = `Server returned ${xhr.status}`;
+          let errorMessage = Server returned ${xhr.status};
           try {
             const errorData = JSON.parse(xhr.responseText);
             errorMessage = errorData.error || errorMessage;
@@ -346,9 +378,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const fd = new FormData();
       fd.append("file", file);
       fd.append("target", target);
-      fd.append("file_type", document.getElementById('fileTypePermanent').checked ? "permanent" : "temporary");
-      if (document.getElementById('fileTypeTemporary').checked) {
-        const expirationDate = document.getElementById('expirationDate').value;
+      fd.append(
+        "file_type",
+        document.getElementById("fileTypePermanent").checked
+          ? "permanent"
+          : "temporary"
+      );
+      if (document.getElementById("fileTypeTemporary").checked) {
+        const expirationDate = document.getElementById("expirationDate").value;
         if (expirationDate) {
           fd.append("expiration_date", expirationDate);
         }
@@ -364,9 +401,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadStats() {
     try {
-      const response = await fetch('/api/stats');
+      const response = await fetch("/api/stats");
       if (!response.ok) {
-        throw new Error(`Failed to fetch stats: ${response.statusText}`);
+        throw new Error(Failed to fetch stats: ${response.statusText});
       }
       const stats = await response.json();
       templatesUsedEl.textContent = stats.templatesUsed;
@@ -414,11 +451,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert(`✅ File uploaded successfully!\nShareable link: ${data.download_url}`);
+        alert(
+          ✅ File uploaded successfully!\nShareable link: ${data.download_url}
+        );
         uploadShareModal.classList.add("hidden");
         loadUserFiles(); // Refresh the file list
       } else {
-        alert(`❌ Error uploading file: ${data.error || response.statusText}`);
+        alert(❌ Error uploading file: ${data.error || response.statusText});
       }
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -427,6 +466,17 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---------------- SETTINGS ----------------
+  // Dark mode toggle in settings
+  const darkModeSwitch = document.getElementById("darkModeSwitch");
+  if (darkModeSwitch) {
+    darkModeSwitch.addEventListener("change", () => {
+      const isDark = darkModeSwitch.checked;
+      root.classList.toggle("dark", isDark);
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+      updateButtonText();
+    });
+  }
+
   const saveUsernameBtn = document.getElementById("saveUsername");
   saveUsernameBtn?.addEventListener("click", async () => {
     const newUsername = document.getElementById("newUsername").value;
@@ -452,7 +502,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("userName").textContent = newUsername;
         document.getElementById("sidebarName").textContent = newUsername;
       } else {
-        alert(`❌ Error updating username: ${data.message || response.statusText}`);
+        alert(
+          ❌ Error updating username: ${data.message || response.statusText}
+        );
       }
     } catch (error) {
       console.error("Error updating username:", error);
@@ -464,8 +516,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Fetch and set the initial state of the notification toggle
   fetch("/api/settings")
-    .then(res => res.json())
-    .then(data => {
+    .then((res) => res.json())
+    .then((data) => {
       notifToggle.checked = data.notifications;
     });
 
@@ -473,8 +525,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Fetch and set the initial state of the language select
   fetch("/api/settings")
-    .then(res => res.json())
-    .then(data => {
+    .then((res) => res.json())
+    .then((data) => {
       notifToggle.checked = data.notifications;
       languageSelect.value = data.language;
     });
@@ -493,7 +545,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(`❌ Error updating language settings: ${data.message || response.statusText}`);
+        alert(
+          `❌ Error updating language settings: ${
+            data.message || response.statusText
+          }`
+        );
       }
     } catch (error) {
       console.error("Error updating language settings:", error);
@@ -515,7 +571,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(`❌ Error updating notification settings: ${data.message || response.statusText}`);
+        alert(
+          `❌ Error updating notification settings: ${
+            data.message || response.statusText
+          }`
+        );
       }
     } catch (error) {
       console.error("Error updating notification settings:", error);
@@ -529,11 +589,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const templateName = btn.closest("div").querySelector("h3").textContent;
       // For now, let's just download a dummy file.
       // In a real application, you would fetch the template from the server.
-      const blob = new Blob([`This is a dummy ${templateName} template.`], { type: "text/plain" });
+      const blob = new Blob([This is a dummy ${templateName} template.], {
+        type: "text/plain",
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${templateName.toLowerCase().replace(/\s+/g, "-")}-template.txt`;
+      a.download = `${templateName
+        .toLowerCase()
+        .replace(/\s+/g, "-")}-template.txt`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -589,7 +653,9 @@ document.addEventListener("DOMContentLoaded", () => {
         profileForm.classList.add("hidden"); // Hide form after saving
         toggleEditProfileFormBtn.classList.remove("hidden"); // Show edit button
       } else {
-        alert(`❌ Error saving profile: ${data.message || response.statusText}`);
+        alert(
+          ❌ Error saving profile: ${data.message || response.statusText}
+        );
       }
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -626,7 +692,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("sidebarAvatar").src = newAvatarUrl;
         document.getElementById("userAvatar").src = newAvatarUrl;
       } else {
-        alert(`❌ Error uploading avatar: ${data.error || response.statusText}`);
+        alert(
+          ❌ Error uploading avatar: ${data.error || response.statusText}
+        );
       }
     } catch (error) {
       console.error("Error uploading avatar:", error);
@@ -638,42 +706,56 @@ document.addEventListener("DOMContentLoaded", () => {
   const activityLogContainer = document.getElementById("activityLogContainer");
 
   async function loadActivityLog() {
-    activityLogContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">Loading activity...</p>`;
+    activityLogContainer.innerHTML = <p class="text-center text-gray-500 dark:text-gray-400">Loading activity...</p>;
 
     try {
-      const response = await fetch('/api/logs');
+      const response = await fetch("/api/logs");
       if (!response.ok) {
-        throw new Error(`Failed to fetch logs: ${response.statusText}`);
+        throw new Error(Failed to fetch logs: ${response.statusText});
       }
       let logs = await response.json();
-      
+
       // Filter logs to only include desired actions
-      const filteredLogs = logs.filter(log => {
+      const filteredLogs = logs.filter((log) => {
         const lowerCaseAction = log.action.toLowerCase();
-        return lowerCaseAction.includes('file convert') || 
-               lowerCaseAction.includes('file upload') || 
-               lowerCaseAction.includes('file share') || 
-               lowerCaseAction.includes('template use');
+        return (
+          lowerCaseAction.includes("file convert") ||
+          lowerCaseAction.includes("file upload") ||
+          lowerCaseAction.includes("file share") ||
+          lowerCaseAction.includes("template use")
+        );
       });
 
       if (filteredLogs.length === 0) {
-        activityLogContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">No relevant activity recorded yet.</p>`;
+        activityLogContainer.innerHTML = <p class="text-center text-gray-500 dark:text-gray-400">No relevant activity recorded yet.</p>;
       } else {
-        activityLogContainer.innerHTML = filteredLogs.map(log => `
+        activityLogContainer.innerHTML = filteredLogs
+          .map(
+            (log) => `
           <div class="flex items-start gap-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
             <div class="w-8 h-8 flex-shrink-0 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-              <i class="fa-solid ${getIconForAction(log.action)} text-gray-600 dark:text-gray-300"></i>
+              <i class="fa-solid ${getIconForAction(
+                log.action
+              )} text-gray-600 dark:text-gray-300"></i>
             </div>
             <div>
-              <p class="font-medium text-gray-800 dark:text-gray-200">${log.action}</p>
-              <p class="text-sm text-gray-600 dark:text-gray-400">${log.details}</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">${new Date(log.timestamp).toLocaleString()}</p>
+              <p class="font-medium text-gray-800 dark:text-gray-200">${
+                log.action
+              }</p>
+              <p class="text-sm text-gray-600 dark:text-gray-400">${
+                log.details
+              }</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">${new Date(
+                log.timestamp
+              ).toLocaleString()}</p>
             </div>
           </div>
-        `).join('');
+        `
+          )
+          .join("");
       }
     } catch (error) {
-      activityLogContainer.innerHTML = `<p class="text-center text-red-500">Error loading activity log.</p>`;
+      activityLogContainer.innerHTML = <p class="text-center text-red-500">Error loading activity log.</p>;
       console.error("Error fetching activity log:", error);
     }
   }
@@ -685,36 +767,40 @@ document.addEventListener("DOMContentLoaded", () => {
   loadUserFiles();
 
   function getIconForAction(action) {
-    if (action.includes('Login')) return 'fa-right-to-bracket';
-    if (action.includes('Logout')) return 'fa-right-from-bracket';
-    if (action.includes('Profile')) return 'fa-user-pen';
-    if (action.includes('File')) return 'fa-file-arrow-up';
-    return 'fa-circle-info';
+    if (action.includes("Login")) return "fa-right-to-bracket";
+    if (action.includes("Logout")) return "fa-right-from-bracket";
+    if (action.includes("Profile")) return "fa-user-pen";
+    if (action.includes("File")) return "fa-file-arrow-up";
+    return "fa-circle-info";
   }
 
   const filesListContainer = document.getElementById("filesListContainer");
 
   async function loadUserFiles() {
-    const searchTerm = document.getElementById('fileSearchInput').value;
-    const url = new URL(window.location.origin + '/api/files');
+    const searchTerm = document.getElementById("fileSearchInput").value;
+    const url = new URL(window.location.origin + "/api/files");
     if (searchTerm) {
-      url.searchParams.append('search', searchTerm);
+      url.searchParams.append("search", searchTerm);
     }
 
-    filesListContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">Loading your files...</p>`;
+    filesListContainer.innerHTML = <p class="text-center text-gray-500 dark:text-gray-400">Loading your files...</p>;
 
     try {
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error(`Failed to fetch files: ${response.statusText}`);
+        throw new Error(Failed to fetch files: ${response.statusText});
       }
       const files = await response.json();
 
       if (files.length === 0) {
-        filesListContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">You haven't converted any files yet.</p>`;
+        filesListContainer.innerHTML = <p class="text-center text-gray-500 dark:text-gray-400">You haven't converted any files yet.</p>;
       } else {
-        filesListContainer.innerHTML = files.map(file => `
-            <div class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 flex items-center justify-between" data-file-id="${file.id}">
+        filesListContainer.innerHTML = files
+          .map(
+            (file) => `
+            <div class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 flex items-center justify-between" data-file-id="${
+              file.id
+            }">
               <div class="flex items-center gap-4">
                 <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                   <i class="fa-solid fa-file-lines text-gray-600 dark:text-gray-300"></i>
@@ -722,42 +808,64 @@ document.addEventListener("DOMContentLoaded", () => {
               <div>
                 <h3 class="font-medium truncate max-w-xs">${file.filename}</h3>
                 <p class="text-sm text-neutral-500">
-                  Converted to <strong>${file.format.toUpperCase()}</strong> on ${new Date(file.timestamp).toLocaleDateString()}
-                  <span class="ml-2 px-2 py-1 text-xs rounded-full ${file.file_type === 'temporary' ? 'bg-yellow-200 text-yellow-800' : 'bg-green-200 text-green-800'}">${file.file_type}</span>
-                  ${file.file_type === 'temporary' && file.expires_at ? `<span class="ml-2 text-xs text-red-500">Expires on ${new Date(file.expires_at).toLocaleDateString()}</span>` : ''}
+                  Converted to <strong>${file.format.toUpperCase()}</strong> on ${new Date(
+              file.timestamp
+            ).toLocaleDateString()}
+                  <span class="ml-2 px-2 py-1 text-xs rounded-full ${
+                    file.file_type === "temporary"
+                      ? "bg-yellow-200 text-yellow-800"
+                      : "bg-green-200 text-green-800"
+                  }">${file.file_type}</span>
+                  ${
+                    file.file_type === "temporary" && file.expires_at
+                      ? `<span class="ml-2 text-xs text-red-500">Expires on ${new Date(
+                          file.expires_at
+                        ).toLocaleDateString()}</span>`
+                      : ""
+                  }
                 </p>
               </div>
             </div>
             <div class="flex gap-2">
-              <a href="${file.url}" download class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-neutral-100 dark:hover:bg-neutral-800" title="Download">
+              <a href="${
+                file.url
+              }" download class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-neutral-100 dark:hover:bg-neutral-800" title="Download">
                 <i class="fa-solid fa-download"></i>
               </a>
-              <button class="delete-file-btn p-2 rounded-lg text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50" title="Delete" data-file-id="${file.id}">
+              <button class="delete-file-btn p-2 rounded-lg text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50" title="Delete" data-file-id="${
+                file.id
+              }">
                 <i class="fa-solid fa-trash-can pointer-events-none"></i>
               </button>
             </div>
           </div>
-        `).join('');
+        `
+          )
+          .join("");
       }
     } catch (error) {
-      filesListContainer.innerHTML = `<p class="text-center text-red-500">Error loading your files.</p>`;
+      filesListContainer.innerHTML = <p class="text-center text-red-500">Error loading your files.</p>;
       console.error("Error fetching user files:", error);
     }
   }
 
   // Event delegation for deleting files
-  filesListContainer.addEventListener('click', async (e) => {
-    const deleteButton = e.target.closest('.delete-file-btn');
+  filesListContainer.addEventListener("click", async (e) => {
+    const deleteButton = e.target.closest(".delete-file-btn");
     if (!deleteButton) return;
 
     const fileId = deleteButton.dataset.fileId;
-    const fileCard = deleteButton.closest('[data-file-id]');
-    const filename = fileCard.querySelector('h3').textContent;
+    const fileCard = deleteButton.closest("[data-file-id]");
+    const filename = fileCard.querySelector("h3").textContent;
 
-    if (confirm(`Are you sure you want to delete "${filename}"? This action cannot be undone.`)) {
+    if (
+      confirm(
+        Are you sure you want to delete "${filename}"? This action cannot be undone.
+      )
+    ) {
       try {
-        const response = await fetch(`/api/files/${fileId}`, {
-          method: 'DELETE',
+        const response = await fetch(/api/files/${fileId}, {
+          method: "DELETE",
         });
 
         const data = await response.json();
@@ -766,25 +874,30 @@ document.addEventListener("DOMContentLoaded", () => {
           fileCard.remove(); // Remove the file card from the UI
           alert(data.message);
         } else {
-          throw new Error(data.error || 'Failed to delete the file.');
+          throw new Error(data.error || "Failed to delete the file.");
         }
       } catch (error) {
-        console.error('Deletion error:', error);
-        alert(`Error: ${error.message}`);
+        console.error("Deletion error:", error);
+        alert(Error: ${error.message});
       }
     }
   });
 
   // --- File Search ---
-  const fileSearchInput = document.getElementById('fileSearchInput');
+  const fileSearchInput = document.getElementById("fileSearchInput");
   let debounceTimer;
 
-  fileSearchInput.addEventListener('input', () => {
+  fileSearchInput.addEventListener("input", () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-      // When the user types, we should reset the `filesLoaded` flag to force a reload
+      // When the user types, we should reset the filesLoaded flag to force a reload
       // For simplicity, we just call the load function directly.
       loadUserFiles();
     }, 300); // Wait 300ms after user stops typing before searching
   });
 });
+
+// Tailwind CSS Dark Mode Configuration
+tailwind.config = {
+  darkMode: "class",
+};
