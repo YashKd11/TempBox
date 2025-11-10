@@ -236,7 +236,7 @@ def api_convert():
             'converted_filename': output_filename,
             'converted_file_id': converted_file_id,
             'target_format': target_format,
-            'timestamp': datetime.utcnow(),
+            'timestamp': datetime.utcnow(),'file_type': 'permanent','expires_at': None
         })
 
         download_url = url_for('download_file', file_id=str(converted_file_id), _external=True)
@@ -259,6 +259,29 @@ def api_convert():
             os.remove(temp_input_path)
         if os.path.exists(temp_output_path):
             os.remove(temp_output_path)
+
+@app.route('/share/<file_id>')
+def share_file(file_id):
+    try:
+        file_doc = files_collection.find_one({
+            '$or': [{'original_file_id': ObjectId(file_id)}, {'converted_file_id': ObjectId(file_id)}]
+        })
+
+        if not file_doc:
+            return "File not found.", 404
+
+        if file_doc.get('file_type') == 'temporary' and file_doc.get('expires_at') and datetime.utcnow() > file_doc.get('expires_at'):
+            return "This link has expired.", 410 # Gone
+
+        file_info = fs.get(ObjectId(file_id))
+        return send_file(
+            io.BytesIO(file_info.read()),
+            mimetype=file_info.content_type or 'application/octet-stream',
+            as_attachment=True,
+            download_name=file_info.filename
+        )
+    except Exception:
+        return "File not found or invalid link.", 404
 
 @app.route('/file/<file_id>')
 @login_required
@@ -307,21 +330,29 @@ def get_user_files():
     files_list = []
     for file_doc in files_cursor:
         file_id_to_download = file_doc.get('converted_file_id') or file_doc.get('original_file_id')
+        file_id_to_share = file_doc.get('converted_file_id') or file_doc.get('original_file_id')
+        
         download_url = url_for('download_file', file_id=str(file_id_to_download)) if file_id_to_download else None
+        share_url = url_for('share_file', file_id=str(file_id_to_share), _external=True) if file_id_to_share else None
+        
+        is_converted = file_doc.get('target_format') not in [None, 'shared']
+
         files_list.append({
             'id': str(file_doc.get('_id')),
             'filename': file_doc.get('original_filename', 'untitled'),
-            'format': file_doc.get('target_format', 'N/A'),
+            'format': file_doc.get('target_format', 'N/A') if is_converted else os.path.splitext(file_doc.get('original_filename', ''))[1][1:].upper(),
             'url': download_url,
             'timestamp': file_doc.get('timestamp').isoformat(),
             'file_type': file_doc.get('file_type', 'permanent'),
-            'expires_at': file_doc.get('expires_at').isoformat() if file_doc.get('expires_at') else None
+            'expires_at': file_doc.get('expires_at').isoformat() if file_doc.get('expires_at') else None,
+            'share_url': share_url
         })
     return jsonify(files_list)
 
 @app.route('/api/files/<string:file_id>', methods=['DELETE'])
 @login_required
 def delete_file(file_id):
+    print(f"Deleting file with id: {file_id}")
     user_id = session['user_id']
     try:
         file_doc = files_collection.find_one({'_id': ObjectId(file_id), 'user_id': ObjectId(user_id)})
@@ -364,7 +395,19 @@ def api_upload():
         return jsonify({'error': 'No selected file'}), 400
 
     if file:
+        from datetime import timedelta
+
         filename = secure_filename(file.filename)
+        file_type = request.form.get('file_type', 'permanent')
+        expiration_hours = request.form.get('expiration_hours')
+        expires_at = None
+
+        if file_type == 'temporary' and expiration_hours:
+            try:
+                expires_at = datetime.utcnow() + timedelta(hours=int(expiration_hours))
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Invalid expiration hours value.'}), 400
+
         # Save file to GridFS
         file_id = fs.put(file.stream, filename=filename, content_type=file.content_type)
 
@@ -373,11 +416,11 @@ def api_upload():
             'user_id': ObjectId(session['user_id']),
             'original_filename': filename,
             'original_file_id': file_id,
-            'target_format': 'shared',
+            'target_format': 'shared', 'file_type': file_type, 'expires_at': expires_at,
             'timestamp': datetime.utcnow()
         })
 
-        download_url = url_for('download_file', file_id=str(file_id), _external=True)
+        share_url = url_for('share_file', file_id=str(file_id), _external=True)
 
         user = users_collection.find_one({'_id': ObjectId(session['user_id'])})
         logs_collection.insert_one({
@@ -385,7 +428,7 @@ def api_upload():
             'action': 'file_share', 'details': f"Shared file: {filename}",
             'timestamp': datetime.utcnow()
         })
-        return jsonify({'download_url': download_url}), 200
+        return jsonify({'share_url': share_url}), 200
     return jsonify({'error': 'File processing failed'}), 500
 
 @app.route('/api/settings', methods=['GET', 'POST'])

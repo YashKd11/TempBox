@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="/2.js"></script>
+    <script defer src="/static/dashboard.js"></script>
     <script
       src="https://kit.fontawesome.com/2cb49ad06d.js"
       crossorigin="anonymous"
@@ -444,24 +444,6 @@
               <input type="file" id="fileInput" class="hidden" />
             </label>
 
-            <!-- File Type (Permanent/Temporary) Selection -->
-            <div class="flex items-center justify-center gap-4 mt-4">
-                <label class="inline-flex items-center">
-                    <input type="radio" name="file_type" value="permanent" class="form-radio text-blue-600" checked id="fileTypePermanent">
-                    <span class="ml-2 text-gray-700 dark:text-gray-300">Permanent</span>
-                </label>
-                <label class="inline-flex items-center">
-                    <input type="radio" name="file_type" value="temporary" class="form-radio text-blue-600" id="fileTypeTemporary">
-                    <span class="ml-2 text-gray-700 dark:text-gray-300">Temporary</span>
-                </label>
-            </div>
-
-            <!-- Expiration Date for Temporary Files (initially hidden) -->
-            <div id="expirationDateContainer" class="mt-4 hidden">
-                <label for="expirationDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Expire On:</label>
-                <input type="datetime-local" id="expirationDate" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
-            </div>
-
             <!-- File preview + format select -->
             <div class="flex items-center gap-3 mt-4">
               <div
@@ -876,6 +858,21 @@ file
       </main>
     </div>
 
+    <!-- Share File Modal -->
+    <div id="shareFileModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden z-50">
+      <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md">
+        <h2 class="text-2xl font-semibold mb-4">Share File</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Anyone with this link can view and download the file. The link will expire if the file is temporary.</p>
+        <div class="relative">
+          <input type="text" id="shareLinkInput" readonly class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+          <button id="copyShareLinkBtn" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600" title="Copy to clipboard">
+            <i class="fa-regular fa-copy"></i>
+          </button>
+        </div>
+        <button id="closeShareModalBtn" class="mt-6 w-full px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition">Close</button>
+      </div>
+    </div>
+
     <!-- Upload & Share Modal -->
     <div id="uploadShareModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
       <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md">
@@ -884,6 +881,27 @@ file
           <div class="mb-4">
             <label for="fileToUpload" class="block text-sm font-medium text-gray-700 dark:text-gray-300">File</label>
             <input type="file" id="fileToUpload" name="fileToUpload" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+          </div>
+          <!-- File Type Selection -->
+          <div class="mb-4">
+            <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">File Lifetime</span>
+            <div class="flex items-center gap-4 mt-2">
+              <label class="inline-flex items-center">
+                <input type="radio" name="upload_file_type" value="permanent" class="form-radio text-blue-600" checked id="uploadFileTypePermanent">
+                <span class="ml-2 text-gray-700 dark:text-gray-300">Permanent</span>
+              </label>
+              <label class="inline-flex items-center">
+                <input type="radio" name="upload_file_type" value="temporary" class="form-radio text-blue-600" id="uploadFileTypeTemporary">
+                <span class="ml-2 text-gray-700 dark:text-gray-300">Temporary</span>
+              </label>
+            </div>
+          </div>
+          <!-- Expiration Options for Temporary Files -->
+          <div id="uploadExpirationContainer" class="mb-4 hidden">
+            <label for="uploadExpirationHours" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Expires In</label>
+            <select id="uploadExpirationHours" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+              <option value="1">1 Hour</option><option value="2">2 Hours</option><option value="3">3 Hours</option>
+            </select>
           </div>
           <div class="flex justify-end gap-3">
             <button type="button" id="cancelUploadShareBtn" class="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition">Cancel</button>

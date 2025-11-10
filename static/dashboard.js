@@ -328,20 +328,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const expirationDateContainer = document.getElementById(
-    "expirationDateContainer"
-  );
-  const fileTypePermanent = document.getElementById("fileTypePermanent");
-  const fileTypeTemporary = document.getElementById("fileTypeTemporary");
-
-  fileTypePermanent.addEventListener("change", () => {
-    expirationDateContainer.classList.add("hidden");
-  });
-
-  fileTypeTemporary.addEventListener("change", () => {
-    expirationDateContainer.classList.remove("hidden");
-  });
-
   function uploadToServer(file, target) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -381,18 +367,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const fd = new FormData();
       fd.append("file", file);
       fd.append("target", target);
-      fd.append(
-        "file_type",
-        document.getElementById("fileTypePermanent").checked
-          ? "permanent"
-          : "temporary"
-      );
-      if (document.getElementById("fileTypeTemporary").checked) {
-        const expirationDate = document.getElementById("expirationDate").value;
-        if (expirationDate) {
-          fd.append("expiration_date", expirationDate);
-        }
-      }
       xhr.send(fd);
     });
   }
@@ -433,6 +407,20 @@ document.addEventListener("DOMContentLoaded", () => {
     uploadShareModal.classList.add("hidden");
   });
 
+  // Logic for upload modal's temporary/permanent options
+  const uploadExpirationContainer = document.getElementById("uploadExpirationContainer");
+  const uploadFileTypePermanent = document.getElementById("uploadFileTypePermanent");
+  const uploadFileTypeTemporary = document.getElementById("uploadFileTypeTemporary");
+
+  uploadFileTypePermanent?.addEventListener("change", () => {
+    uploadExpirationContainer.classList.add("hidden");
+  });
+
+  uploadFileTypeTemporary?.addEventListener("change", () => {
+    uploadExpirationContainer.classList.remove("hidden");
+  });
+
+
   const uploadShareForm = document.getElementById("uploadShareForm");
 
   uploadShareForm?.addEventListener("submit", async (e) => {
@@ -448,6 +436,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const formData = new FormData();
     formData.append("file", file);
 
+    // Append file type and expiration data
+    const fileType = document.querySelector('input[name="upload_file_type"]:checked').value;
+    formData.append("file_type", fileType);
+
+    if (fileType === "temporary") {
+      const expirationHours = document.getElementById("uploadExpirationHours").value;
+      if (expirationHours) {
+        formData.append("expiration_hours", expirationHours);
+      }
+    }
+
+
+
     try {
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -457,11 +458,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert(
-          `✅ File uploaded successfully!\nShareable link: ${data.download_url}`
-        );
+        // Instead of an alert, just close the modal and refresh the list.
+        // The user can get the link from the "Share" button on the new file entry.
         uploadShareModal.classList.add("hidden");
         loadUserFiles(); // Refresh the file list
+
+        // Optional: Show a toast/notification for better UX, but for now, this is cleaner.
+        // For example, you could implement a small notification banner at the top of the page.
+        console.log(`File uploaded. Shareable link: ${data.share_url}`);
       } else {
         alert(`❌ Error uploading file: ${data.error || response.statusText}`);
       }
@@ -470,6 +474,29 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("An error occurred while uploading the file.");
     }
   });
+
+  // ---------------- SHARE FILE MODAL ----------------
+  const shareFileModal = document.getElementById("shareFileModal");
+  const closeShareModalBtn = document.getElementById("closeShareModalBtn");
+  const copyShareLinkBtn = document.getElementById("copyShareLinkBtn");
+  const shareLinkInput = document.getElementById("shareLinkInput");
+
+  closeShareModalBtn.addEventListener("click", () => {
+    shareFileModal.classList.add("hidden");
+  });
+
+  copyShareLinkBtn.addEventListener("click", () => {
+    shareLinkInput.select();
+    document.execCommand("copy");
+    // Provide feedback to the user
+    const originalIcon = copyShareLinkBtn.innerHTML;
+    copyShareLinkBtn.innerHTML = `<i class="fa-solid fa-check text-green-500"></i>`;
+    setTimeout(() => {
+      copyShareLinkBtn.innerHTML = originalIcon;
+    }, 2000);
+  });
+
+
 
   // ---------------- SETTINGS ----------------
   // Dark mode toggle in settings
@@ -803,11 +830,16 @@ a.click();
                   <i class="fa-solid fa-file-lines text-gray-600 dark:text-gray-300"></i>
                 </div>
               <div>
-                <h3 class="font-medium truncate max-w-xs">${file.filename}</h3>
+                <h3 class="font-medium truncate max-w-xs">${
+                  file.filename
+                }</h3>
                 <p class="text-sm text-neutral-500">
-                  Converted to <strong>${file.format.toUpperCase()}</strong> on ${new Date(
-              file.timestamp
-            ).toLocaleDateString()}
+                  ${
+                    file.format && file.format !== "shared"
+                      ? `Converted to <strong>${file.format.toUpperCase()}</strong>`
+                      : `Uploaded`
+                  }
+                  on ${new Date(file.timestamp).toLocaleDateString()}
                   <span class="ml-2 px-2 py-1 text-xs rounded-full ${
                     file.file_type === "temporary"
                       ? "bg-yellow-200 text-yellow-800"
@@ -829,6 +861,9 @@ a.click();
               }" download class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-neutral-100 dark:hover:bg-neutral-800" title="Download">
                 <i class="fa-solid fa-download"></i>
               </a>
+              <button class="share-file-btn p-2 rounded-lg text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50" title="Share" data-share-url="${file.share_url}">
+                <i class="fa-solid fa-share-nodes pointer-events-none"></i>
+              </button>
               <button class="delete-file-btn p-2 rounded-lg text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50" title="Delete" data-file-id="${
                 file.id
               }">
@@ -848,34 +883,44 @@ a.click();
 
   // Event delegation for deleting files
   filesListContainer.addEventListener("click", async (e) => {
+    // Handle Share Button
+    const shareButton = e.target.closest(".share-file-btn");
+    if (shareButton) {
+      const shareUrl = shareButton.dataset.shareUrl;
+      shareLinkInput.value = shareUrl;
+      shareFileModal.classList.remove("hidden");
+      return; // Stop further execution if share button was clicked
+    }
+
+    // Handle Delete Button
     const deleteButton = e.target.closest(".delete-file-btn");
-    if (!deleteButton) return;
-
-    const fileId = deleteButton.dataset.fileId;
-    const fileCard = deleteButton.closest("[data-file-id]");
-    const filename = fileCard.querySelector("h3").textContent;
-
-    if (
-      confirm(
-        `Are you sure you want to delete "${filename}"? This action cannot be undone.`
-      )
-    ) {
-      try {
-        const response = await fetch(`/api/files/${fileId}`, {
-          method: "DELETE",
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          fileCard.remove(); // Remove the file card from the UI
-          alert(data.message);
-        } else {
-          throw new Error(data.error || "Failed to delete the file.");
+    if (deleteButton) {
+      const fileId = deleteButton.dataset.fileId;
+      const fileCard = deleteButton.closest("[data-file-id]");
+      const filename = fileCard.querySelector("h3").textContent;
+  
+      if (
+        confirm(
+          `Are you sure you want to delete "${filename}"? This action cannot be undone.`
+        )
+      ) {
+        try {
+          const response = await fetch(`/api/files/${fileId}`, {
+            method: "DELETE",
+          });
+  
+          const data = await response.json();
+  
+          if (response.ok) {
+            fileCard.remove(); // Remove the file card from the UI
+            alert(data.message);
+          } else {
+            throw new Error(data.error || "Failed to delete the file.");
+          }
+        } catch (error) {
+          console.error("Deletion error:", error);
+          alert(`Error: ${error.message}`);
         }
-      } catch (error) {
-        console.error("Deletion error:", error);
-        alert(`Error: ${error.message}`);
       }
     }
   });
