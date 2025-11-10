@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch("/api/logout", { method: "POST", credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
-        alert(✅ ${data.message});
+        alert(`✅ ${data.message}`);
         window.location.href = "/login"; // Redirect to login page
       })
       .catch((err) => {
@@ -228,11 +228,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const showProgress = (pct, text) => {
     progressWrap.classList.remove("hidden");
-    progressBar.style.width = ${pct}%;
-    statusText.textContent = text || ${pct}%;
+    progressBar.style.width = `${pct}%`;
+    statusText.textContent = text || `${pct}%`;
   };
   const resetProgress = () => {
-    progressBar.style.width = 0%;
+    progressBar.style.width = "0%";
     progressWrap.classList.add("hidden");
     statusText.textContent = "";
   };
@@ -245,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
     //async means that this function have to wait for the action to complete
     resultBox.innerHTML = "";
     if (!fileInput.files.length) {
-      resultBox.innerHTML = <div class="text-red-500">Please select a file first.</div>;
+      resultBox.innerHTML = `<div class="text-red-500">Please select a file first.</div>`;
       return;
     }
 
@@ -346,15 +346,16 @@ document.addEventListener("DOMContentLoaded", () => {
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
           const pct = Math.round((e.loaded / e.total) * 70);
-          showProgress(pct, Uploading... ${pct}%);
+          showProgress(pct, `Uploading... ${pct}%`);
         }
       };
-      xhr.onload = () => {
+      xhr.onload = ().
+      {
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const responseData = JSON.parse(xhr.responseText); // Expect JSON response
             if (responseData.download_url) {
-              resultBox.innerHTML = <a href="${responseData.download_url}" download="converted-file" class="inline-block px-4 py-2 bg-green-500 text-white rounded">Download</a>;
+              resultBox.innerHTML = `<a href="${responseData.download_url}" download="converted-file" class="inline-block px-4 py-2 bg-green-500 text-white rounded">Download</a>`;
               showProgress(100, "Converted");
               resolve();
             } else {
@@ -364,7 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
             reject(new Error("Failed to parse server response."));
           }
         } else {
-          let errorMessage = Server returned ${xhr.status};
+          let errorMessage = `Server returned ${xhr.status}`;
           try {
             const errorData = JSON.parse(xhr.responseText);
             errorMessage = errorData.error || errorMessage;
@@ -403,7 +404,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch("/api/stats");
       if (!response.ok) {
-        throw new Error(Failed to fetch stats: ${response.statusText});
+        throw new Error(`Failed to fetch stats: ${response.statusText}`);
       }
       const stats = await response.json();
       templatesUsedEl.textContent = stats.templatesUsed;
@@ -452,12 +453,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         alert(
-          ✅ File uploaded successfully!\nShareable link: ${data.download_url}
+          `✅ File uploaded successfully!\nShareable link: ${data.download_url}`
         );
         uploadShareModal.classList.add("hidden");
         loadUserFiles(); // Refresh the file list
       } else {
-        alert(❌ Error uploading file: ${data.error || response.statusText});
+        alert(`❌ Error uploading file: ${data.error || response.statusText}`);
       }
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -503,7 +504,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("sidebarName").textContent = newUsername;
       } else {
         alert(
-          ❌ Error updating username: ${data.message || response.statusText}
+          `❌ Error updating username: ${data.message || response.statusText}`
         );
       }
     } catch (error) {
@@ -577,7 +578,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }`
         );
       }
-    } catch (error) {
+    } catch (error) => {
       console.error("Error updating notification settings:", error);
       alert("An error occurred while updating the notification settings.");
     }
@@ -589,7 +590,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const templateName = btn.closest("div").querySelector("h3").textContent;
       // For now, let's just download a dummy file.
       // In a real application, you would fetch the template from the server.
-      const blob = new Blob([This is a dummy ${templateName} template.], {
+      const blob = new Blob([`This is a dummy ${templateName} template.`], {
         type: "text/plain",
       });
       const url = URL.createObjectURL(blob);
@@ -599,7 +600,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .toLowerCase()
         .replace(/\s+/g, "-")}-template.txt`;
       document.body.appendChild(a);
-      a.click();
+a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     });
@@ -654,7 +655,7 @@ document.addEventListener("DOMContentLoaded", () => {
         toggleEditProfileFormBtn.classList.remove("hidden"); // Show edit button
       } else {
         alert(
-          ❌ Error saving profile: ${data.message || response.statusText}
+          `❌ Error saving profile: ${data.message || response.statusText}`
         );
       }
     } catch (error) {
@@ -693,7 +694,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("userAvatar").src = newAvatarUrl;
       } else {
         alert(
-          ❌ Error uploading avatar: ${data.error || response.statusText}
+          `❌ Error uploading avatar: ${data.error || response.statusText}`
         );
       }
     } catch (error) {
@@ -706,12 +707,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const activityLogContainer = document.getElementById("activityLogContainer");
 
   async function loadActivityLog() {
-    activityLogContainer.innerHTML = <p class="text-center text-gray-500 dark:text-gray-400">Loading activity...</p>;
+    activityLogContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">Loading activity...</p>`;
 
     try {
       const response = await fetch("/api/logs");
       if (!response.ok) {
-        throw new Error(Failed to fetch logs: ${response.statusText});
+        throw new Error(`Failed to fetch logs: ${response.statusText}`);
       }
       let logs = await response.json();
 
@@ -727,7 +728,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (filteredLogs.length === 0) {
-        activityLogContainer.innerHTML = <p class="text-center text-gray-500 dark:text-gray-400">No relevant activity recorded yet.</p>;
+        activityLogContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">No relevant activity recorded yet.</p>`;
       } else {
         activityLogContainer.innerHTML = filteredLogs
           .map(
@@ -755,7 +756,7 @@ document.addEventListener("DOMContentLoaded", () => {
           .join("");
       }
     } catch (error) {
-      activityLogContainer.innerHTML = <p class="text-center text-red-500">Error loading activity log.</p>;
+      activityLogContainer.innerHTML = `<p class="text-center text-red-500">Error loading activity log.</p>`;
       console.error("Error fetching activity log:", error);
     }
   }
@@ -783,17 +784,17 @@ document.addEventListener("DOMContentLoaded", () => {
       url.searchParams.append("search", searchTerm);
     }
 
-    filesListContainer.innerHTML = <p class="text-center text-gray-500 dark:text-gray-400">Loading your files...</p>;
+    filesListContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">Loading your files...</p>`;
 
     try {
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error(Failed to fetch files: ${response.statusText});
+        throw new Error(`Failed to fetch files: ${response.statusText}`);
       }
       const files = await response.json();
 
       if (files.length === 0) {
-        filesListContainer.innerHTML = <p class="text-center text-gray-500 dark:text-gray-400">You haven't converted any files yet.</p>;
+        filesListContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">You haven't converted any files yet.</p>`;
       } else {
         filesListContainer.innerHTML = files
           .map(
@@ -844,7 +845,7 @@ document.addEventListener("DOMContentLoaded", () => {
           .join("");
       }
     } catch (error) {
-      filesListContainer.innerHTML = <p class="text-center text-red-500">Error loading your files.</p>;
+      filesListContainer.innerHTML = `<p class="text-center text-red-500">Error loading your files.</p>`;
       console.error("Error fetching user files:", error);
     }
   }
@@ -860,11 +861,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (
       confirm(
-        Are you sure you want to delete "${filename}"? This action cannot be undone.
+        `Are you sure you want to delete "${filename}"? This action cannot be undone.`
       )
     ) {
       try {
-        const response = await fetch(/api/files/${fileId}, {
+        const response = await fetch(`/api/files/${fileId}`, {
           method: "DELETE",
         });
 
@@ -878,7 +879,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } catch (error) {
         console.error("Deletion error:", error);
-        alert(Error: ${error.message});
+        alert(`Error: ${error.message}`);
       }
     }
   });
