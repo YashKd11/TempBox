@@ -23,5 +23,5 @@ xmltodict==0.13.0
 nbconvert==7.16.4
 WeasyPrint==62.2
 Markdown==3.6
-pillow-heif==0.16.0
+pillow-heif
 CairoSVG==2.7.1
