@@ -37,6 +37,8 @@ document.addEventListener("DOMContentLoaded", () => {
         loadActivityLog();
       } else if (target === 'templates') {
         loadStats();
+      } else if (target === 'files') {
+        loadUserFiles();
       }
     });
   });
@@ -679,6 +681,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initial load of the default section's content
   loadActivityLog();
 
+  // Initial load of user files
+  loadUserFiles();
+
   function getIconForAction(action) {
     if (action.includes('Login')) return 'fa-right-to-bracket';
     if (action.includes('Logout')) return 'fa-right-from-bracket';
@@ -728,7 +733,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <i class="fa-solid fa-download"></i>
               </a>
               <button class="delete-file-btn p-2 rounded-lg text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50" title="Delete" data-file-id="${file.id}">
-                <i class="fa-solid fa-trash-can"></i>
+                <i class="fa-solid fa-trash-can pointer-events-none"></i>
               </button>
             </div>
           </div>
