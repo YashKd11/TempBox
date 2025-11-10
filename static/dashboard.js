@@ -78,7 +78,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }, 1000);
 
   // Fetch IP and location on dashboard load, and update backend
-  fetch("https://ipapi.co/json/")
+  Promise.race([
+    fetch("https://ipapi.co/json/"),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), 5000))
+  ])
     .then((res) => res.json())
     .then((data) => {
       document.getElementById("userIP").textContent = data.ip || "Unavailable";
@@ -349,8 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
           showProgress(pct, `Uploading... ${pct}%`);
         }
       };
-      xhr.onload = ().
-      {
+      xhr.onload = function() {
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const responseData = JSON.parse(xhr.responseText); // Expect JSON response
@@ -412,6 +414,9 @@ document.addEventListener("DOMContentLoaded", () => {
       filesSharedEl.textContent = stats.filesShared;
     } catch (error) {
       console.error("Error fetching stats:", error);
+      templatesUsedEl.textContent = "Error";
+      filesConvertedEl.textContent = "Error";
+      filesSharedEl.textContent = "Error";
     }
   }
 
@@ -515,16 +520,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const notifToggle = document.getElementById("notifToggle");
 
-  // Fetch and set the initial state of the notification toggle
-  fetch("/api/settings")
-    .then((res) => res.json())
-    .then((data) => {
-      notifToggle.checked = data.notifications;
-    });
-
-  const languageSelect = document.getElementById("languageSelect");
-
-  // Fetch and set the initial state of the language select
+  // Fetch and set the initial state of the notification and language settings
   fetch("/api/settings")
     .then((res) => res.json())
     .then((data) => {
@@ -578,7 +574,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }`
         );
       }
-    } catch (error) => {
+    } catch (error)  {
       console.error("Error updating notification settings:", error);
       alert("An error occurred while updating the notification settings.");
     }
