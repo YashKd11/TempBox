@@ -607,6 +607,51 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // --- Change Password ---
+  const changePasswordForm = document.getElementById("changePasswordForm");
+  changePasswordForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const currentPassword = document.getElementById("currentPassword").value;
+    const newPassword = document.getElementById("newPassword").value;
+    const confirmNewPassword = document.getElementById("confirmNewPassword").value;
+
+    if (newPassword !== confirmNewPassword) {
+      alert("New passwords do not match.");
+      return;
+    }
+
+    if (!currentPassword || !newPassword) {
+      alert("Please fill out all password fields.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/security/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("✅ Password changed successfully!");
+        changePasswordForm.reset(); // Clear the form
+      } else {
+        alert(`❌ Error: ${data.error || "Failed to change password."}`);
+      }
+    } catch (error) {
+      console.error("Password change error:", error);
+      alert("An error occurred while changing the password.");
+    }
+  });
+
+
   // ---------------- TEMPLATES ----------------
   document.querySelectorAll("#templatesSection button").forEach((btn) => {
     btn.addEventListener("click", () => {

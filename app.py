@@ -457,5 +457,36 @@ def get_user_stats():
     files_shared = logs_collection.count_documents({'user_id': ObjectId(user_id), 'action': 'file_share'})
     return jsonify({'templatesUsed': templates_used, 'filesConverted': files_converted, 'filesShared': files_shared})
 
+@app.route('/api/security/change-password', methods=['POST'])
+@login_required
+def change_password():
+    user_id = session['user_id']
+    data = request.get_json()
+    current_password = data.get('current_password')
+    new_password = data.get('new_password')
+
+    if not current_password or not new_password:
+        return jsonify({'error': 'Missing current or new password'}), 400
+
+    user = users_collection.find_one({'_id': ObjectId(user_id)})
+
+    if not user or not check_password_hash(user['password'], current_password):
+        return jsonify({'error': 'Invalid current password'}), 403
+
+    # Hash the new password and update it
+    new_hashed_password = generate_password_hash(new_password)
+    users_collection.update_one(
+        {'_id': ObjectId(user_id)},
+        {'$set': {'password': new_hashed_password}}
+    )
+
+    logs_collection.insert_one({
+        'user_id': user['_id'], 'username': user.get('username'),
+        'action': 'password_change', 'details': 'User changed their password.',
+        'timestamp': datetime.utcnow()
+    })
+
+    return jsonify({'message': 'Password changed successfully'}), 200
+
 if(__name__ == "__main__"):
     app.run(debug=True)
