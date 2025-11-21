@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateButtonText() {
     const isDark = root.classList.contains("dark");
-    btn.textContent = isDark ? "🌙 Dark Mode" : "🌞 Light Mode";
+    btn.textContent = isDark ? " Dark Mode" : " Light Mode";
 
     // Sync the settings toggle checkbox
     const settingsToggle = document.getElementById("darkModeSwitch");
