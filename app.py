@@ -3,7 +3,7 @@ from flask import Flask, request, render_template, redirect, session, url_for, j
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson.objectid import ObjectId # To work with MongoDB's default _id
-from datetime import datetime
+from datetime import datetime, timezone
 from PIL import Image
 import pandas as pd
 from docx2pdf import convert as docx_to_pdf_convert
@@ -78,7 +78,7 @@ def login():
                 'user_id': user['_id'],
                 'username': user['username'],
                 'action': 'login',
-                'timestamp': datetime.utcnow()
+                'timestamp': datetime.now(timezone.utc)
             })
             return redirect(url_for('dashboard'))
         else:
@@ -187,7 +187,7 @@ def api_logout():
                 'user_id': user['_id'],
                 'username': user.get('username'),
                 'action': 'logout',
-                'timestamp': datetime.utcnow()
+                'timestamp': datetime.now(timezone.utc)
             })
         session.pop('user_id', None)
     return jsonify({'message': 'Logged out successfully'}), 200
@@ -247,7 +247,7 @@ def api_profile():
                 'username': user.get('username'),
                 'action': 'profile_update',
                 'details': f"Updated fields: {', '.join(update_fields.keys())}",
-                'timestamp': datetime.utcnow()
+                'timestamp': datetime.now(timezone.utc)
             })
             return jsonify({'message': 'Profile updated successfully'}), 200
         return jsonify({'message': 'No fields to update'}), 400
@@ -428,7 +428,7 @@ def api_convert():
             'converted_filename': output_filename,
             'target_format': target_format,
             'converted_url': download_url,
-            'timestamp': datetime.utcnow(),
+            'timestamp': datetime.now(timezone.utc),
         })
 
         user = users_collection.find_one({'_id': ObjectId(session['user_id'])})
@@ -437,7 +437,7 @@ def api_convert():
             'username': user.get('username', 'Unknown User'),
             'action': 'file_convert',
             'details': f"Converted '{original_filename}' to '{output_filename}'",
-            'timestamp': datetime.utcnow()
+            'timestamp': datetime.now(timezone.utc)
         })
 
         return jsonify({'download_url': download_url}), 200
@@ -536,7 +536,7 @@ def delete_file(file_id):
         'username': user.get('username'),
         'action': 'file_delete',
         'details': f"Deleted file: {filename}",
-        'timestamp': datetime.utcnow()
+        'timestamp': datetime.now(timezone.utc)
     })
 
     return jsonify({'message': 'File deleted successfully'}), 200
@@ -573,7 +573,7 @@ def api_upload():
             'username': user.get('username', 'Unknown User'),
             'action': 'file_share',
             'details': f"Shared file: {filename}",
-            'timestamp': datetime.utcnow()
+            'timestamp': datetime.now(timezone.utc)
         })
 
         return jsonify({'download_url': download_url}), 200
